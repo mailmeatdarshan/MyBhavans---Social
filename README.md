@@ -269,4 +269,4 @@ This project is for educational purposes as part of Bhavans College.
 
 ## 👨‍💻 Developer
 
-Made with ❤️ by Pawan
+Made with ❤️ by Dubey
