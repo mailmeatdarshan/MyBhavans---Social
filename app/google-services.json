@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "677050243889",
+    "project_id": "mybhavans",
+    "storage_bucket": "mybhavans.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:677050243889:android:5931a1f5ffc8bc20656e10",
+        "android_client_info": {
+          "package_name": "com.bhavans.mybhavans"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDA21iu_HBbk_LG7zf6Jjco1ETKllQj9tY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

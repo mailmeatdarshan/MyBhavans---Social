@@ -1,0 +1,262 @@
+package com.bhavans.mybhavans.core.navigation
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.bhavans.mybhavans.feature.auth.presentation.AuthViewModel
+import com.bhavans.mybhavans.feature.auth.presentation.LoginScreen
+import com.bhavans.mybhavans.feature.auth.presentation.SignUpScreen
+import com.bhavans.mybhavans.feature.canteen.presentation.CanteenCheckInScreen
+import com.bhavans.mybhavans.feature.canteen.presentation.CanteenScreen
+import com.bhavans.mybhavans.feature.feed.presentation.CreatePostScreen
+import com.bhavans.mybhavans.feature.feed.presentation.PostDetailScreen
+import com.bhavans.mybhavans.feature.lostfound.presentation.CreateLostFoundScreen
+import com.bhavans.mybhavans.feature.lostfound.presentation.LostFoundDetailScreen
+import com.bhavans.mybhavans.feature.lostfound.presentation.LostFoundScreen
+import com.bhavans.mybhavans.feature.main.MainScreen
+import com.bhavans.mybhavans.feature.safewalk.presentation.CreateWalkRequestScreen
+import com.bhavans.mybhavans.feature.safewalk.presentation.SafeWalkScreen
+import com.bhavans.mybhavans.feature.skillswap.presentation.CreateSkillScreen
+import com.bhavans.mybhavans.feature.skillswap.presentation.SkillDetailScreen
+import com.bhavans.mybhavans.feature.skillswap.presentation.SkillSwapScreen
+
+@Composable
+fun NavGraph(
+    navController: NavHostController = rememberNavController(),
+    authViewModel: AuthViewModel = hiltViewModel()
+) {
+    val authState by authViewModel.authState.collectAsState()
+    
+    val startDestination = if (authState.isLoggedIn) {
+        Routes.Main.route
+    } else {
+        Routes.Login.route
+    }
+
+    NavHost(
+        navController = navController,
+        startDestination = startDestination
+    ) {
+        // Auth Flow
+        composable(Routes.Login.route) {
+            LoginScreen(
+                onNavigateToSignUp = {
+                    navController.navigate(Routes.SignUp.route)
+                },
+                onLoginSuccess = {
+                    navController.navigate(Routes.Main.route) {
+                        popUpTo(Routes.Login.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+        
+        composable(Routes.SignUp.route) {
+            SignUpScreen(
+                onNavigateToLogin = {
+                    navController.popBackStack()
+                },
+                onSignUpSuccess = {
+                    navController.navigate(Routes.Main.route) {
+                        popUpTo(Routes.Login.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+        
+        // Main App Flow
+        composable(Routes.Main.route) {
+            MainScreen(
+                onNavigateToCreatePost = {
+                    navController.navigate(Routes.CreatePost.route)
+                },
+                onNavigateToPostDetail = { postId ->
+                    navController.navigate(Routes.PostDetail.createRoute(postId))
+                },
+                onNavigateToLostFound = {
+                    navController.navigate(Routes.LostFound.route)
+                },
+                onNavigateToCanteen = {
+                    navController.navigate(Routes.CanteenStatus.route)
+                },
+                onNavigateToSkillSwap = {
+                    navController.navigate(Routes.SkillSwap.route)
+                },
+                onNavigateToSafeWalk = {
+                    navController.navigate(Routes.SafeWalk.route)
+                },
+                onLogout = {
+                    authViewModel.signOut()
+                    navController.navigate(Routes.Login.route) {
+                        popUpTo(Routes.Main.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+        
+        // Create Post
+        composable(Routes.CreatePost.route) {
+            CreatePostScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        // Post Detail
+        composable(
+            route = Routes.PostDetail.route,
+            arguments = listOf(
+                navArgument("postId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val postId = backStackEntry.arguments?.getString("postId") ?: ""
+            PostDetailScreen(
+                postId = postId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        // Lost & Found
+        composable(Routes.LostFound.route) {
+            LostFoundScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToCreate = {
+                    navController.navigate(Routes.ReportItem.route)
+                },
+                onNavigateToDetail = { itemId ->
+                    navController.navigate(Routes.ItemDetail.createRoute(itemId))
+                }
+            )
+        }
+        
+        // Create Lost & Found Item
+        composable(Routes.ReportItem.route) {
+            CreateLostFoundScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        // Lost & Found Detail
+        composable(
+            route = Routes.ItemDetail.route,
+            arguments = listOf(
+                navArgument("itemId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val itemId = backStackEntry.arguments?.getString("itemId") ?: ""
+            LostFoundDetailScreen(
+                itemId = itemId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        // Canteen Status
+        composable(Routes.CanteenStatus.route) {
+            CanteenScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToDetail = { canteenId ->
+                    navController.navigate(Routes.CanteenCheckIn.createRoute(canteenId))
+                }
+            )
+        }
+        
+        // Canteen Check-In
+        composable(
+            route = Routes.CanteenCheckIn.route,
+            arguments = listOf(
+                navArgument("canteenId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val canteenId = backStackEntry.arguments?.getString("canteenId") ?: ""
+            CanteenCheckInScreen(
+                canteenId = canteenId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        // Skill Swap
+        composable(Routes.SkillSwap.route) {
+            SkillSwapScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToCreate = {
+                    navController.navigate(Routes.CreateSkillListing.route)
+                },
+                onNavigateToDetail = { skillId ->
+                    navController.navigate(Routes.SkillListingDetail.createRoute(skillId))
+                }
+            )
+        }
+        
+        // Create Skill Listing
+        composable(Routes.CreateSkillListing.route) {
+            CreateSkillScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        // Skill Listing Detail
+        composable(
+            route = Routes.SkillListingDetail.route,
+            arguments = listOf(
+                navArgument("listingId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val skillId = backStackEntry.arguments?.getString("listingId") ?: ""
+            SkillDetailScreen(
+                skillId = skillId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        // Safe Walk
+        composable(Routes.SafeWalk.route) {
+            SafeWalkScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToCreate = {
+                    navController.navigate(Routes.CreateSafeWalkRequest.route)
+                },
+                onNavigateToDetail = { requestId ->
+                    // For now, clicking details just refreshes the data
+                    // Can add a detail screen later if needed
+                }
+            )
+        }
+        
+        // Create Safe Walk Request
+        composable(Routes.CreateSafeWalkRequest.route) {
+            CreateWalkRequestScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+    }
+}
