@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import com.bhavans.mybhavans.core.ui.theme.BhavansPrimary
 import com.bhavans.mybhavans.feature.feed.presentation.FeedScreen
 import com.bhavans.mybhavans.feature.profile.presentation.ProfileScreen
@@ -69,7 +70,7 @@ fun MainScreen(
         bottomBar = {
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = androidx.compose.ui.unit.dp.times(3f)
+                tonalElevation = 3.dp
             ) {
                 navItems.forEachIndexed { index, item ->
                     NavigationBarItem(
