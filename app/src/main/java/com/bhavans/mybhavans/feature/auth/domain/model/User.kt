@@ -9,6 +9,10 @@ data class User(
     val year: Int? = null,
     val role: String = "student",
     val bio: String = "",
+    val gender: String = "",
     val skills: List<String> = emptyList(),
-    val isVerified: Boolean = false
+    val isVerified: Boolean = false,
+    val postsCount: Int = 0,
+    val followersCount: Int = 0,
+    val followingCount: Int = 0
 )

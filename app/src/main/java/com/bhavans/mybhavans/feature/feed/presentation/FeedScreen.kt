@@ -67,26 +67,15 @@ fun FeedScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Feed",
-                        fontWeight = FontWeight.Bold
+                        text = "MyBhavans",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.headlineMedium
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = androidx.compose.ui.graphics.Color.Transparent
                 )
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onNavigateToCreatePost,
-                containerColor = BhavansPrimary
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Create Post",
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
-            }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->

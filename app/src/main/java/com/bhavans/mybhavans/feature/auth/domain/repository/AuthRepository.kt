@@ -1,5 +1,6 @@
 package com.bhavans.mybhavans.feature.auth.domain.repository
 
+import android.net.Uri
 import com.bhavans.mybhavans.core.util.Resource
 import com.bhavans.mybhavans.feature.auth.domain.model.User
 import kotlinx.coroutines.flow.Flow
@@ -20,4 +21,10 @@ interface AuthRepository {
     fun isValidCollegeEmail(email: String): Boolean
     
     fun isUserLoggedIn(): Boolean
+
+    suspend fun updateProfile(user: User): Resource<Unit>
+
+    suspend fun uploadProfilePhoto(imageUri: Uri): Resource<String>
+
+    suspend fun getUserProfile(uid: String): Resource<User>
 }

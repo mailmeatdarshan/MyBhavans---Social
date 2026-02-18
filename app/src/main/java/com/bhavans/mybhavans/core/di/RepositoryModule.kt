@@ -1,5 +1,7 @@
 package com.bhavans.mybhavans.core.di
 
+import com.bhavans.mybhavans.feature.admin.data.repository.AdminRepositoryImpl
+import com.bhavans.mybhavans.feature.admin.domain.repository.AdminRepository
 import com.bhavans.mybhavans.feature.auth.data.repository.AuthRepositoryImpl
 import com.bhavans.mybhavans.feature.auth.domain.repository.AuthRepository
 import com.bhavans.mybhavans.feature.canteen.data.repository.CanteenRepositoryImpl
@@ -57,6 +59,10 @@ abstract class RepositoryModule {
     abstract fun bindSafeWalkRepository(
         safeWalkRepositoryImpl: SafeWalkRepositoryImpl
     ): SafeWalkRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAdminRepository(
+        adminRepositoryImpl: AdminRepositoryImpl
+    ): AdminRepository
 }
-
-

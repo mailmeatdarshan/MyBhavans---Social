@@ -90,6 +90,9 @@ dependencies {
     // Coil
     implementation(libs.coil.compose)
 
+    // DataStore
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)

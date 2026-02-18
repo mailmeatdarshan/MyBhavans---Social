@@ -47,4 +47,13 @@ sealed class Routes(val route: String) {
     data object UserProfile : Routes("user_profile/{userId}") {
         fun createRoute(userId: String) = "user_profile/$userId"
     }
+
+    // Admin Routes
+    data object AdminDashboard : Routes("admin_dashboard")
+    data object AdminUsers : Routes("admin_users")
+    data object AdminContent : Routes("admin_content")
+
+    // Explore & Activity (tab content, used internally)
+    data object Explore : Routes("explore")
+    data object Activity : Routes("activity")
 }

@@ -10,6 +10,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.bhavans.mybhavans.feature.admin.presentation.AdminDashboardScreen
+import com.bhavans.mybhavans.feature.admin.presentation.ContentModerationScreen
+import com.bhavans.mybhavans.feature.admin.presentation.UserManagementScreen
 import com.bhavans.mybhavans.feature.auth.presentation.AuthViewModel
 import com.bhavans.mybhavans.feature.auth.presentation.LoginScreen
 import com.bhavans.mybhavans.feature.auth.presentation.SignUpScreen
@@ -21,6 +24,7 @@ import com.bhavans.mybhavans.feature.lostfound.presentation.CreateLostFoundScree
 import com.bhavans.mybhavans.feature.lostfound.presentation.LostFoundDetailScreen
 import com.bhavans.mybhavans.feature.lostfound.presentation.LostFoundScreen
 import com.bhavans.mybhavans.feature.main.MainScreen
+import com.bhavans.mybhavans.feature.profile.presentation.EditProfileScreen
 import com.bhavans.mybhavans.feature.safewalk.presentation.CreateWalkRequestScreen
 import com.bhavans.mybhavans.feature.safewalk.presentation.SafeWalkScreen
 import com.bhavans.mybhavans.feature.skillswap.presentation.CreateSkillScreen
@@ -92,6 +96,12 @@ fun NavGraph(
                 onNavigateToSafeWalk = {
                     navController.navigate(Routes.SafeWalk.route)
                 },
+                onNavigateToEditProfile = {
+                    navController.navigate(Routes.EditProfile.route)
+                },
+                onNavigateToAdmin = {
+                    navController.navigate(Routes.AdminDashboard.route)
+                },
                 onLogout = {
                     authViewModel.signOut()
                     navController.navigate(Routes.Login.route) {
@@ -101,6 +111,46 @@ fun NavGraph(
             )
         }
         
+        // Edit Profile
+        composable(Routes.EditProfile.route) {
+            EditProfileScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // Admin Panel
+        composable(Routes.AdminDashboard.route) {
+            AdminDashboardScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToUsers = {
+                    navController.navigate(Routes.AdminUsers.route)
+                },
+                onNavigateToContent = {
+                    navController.navigate(Routes.AdminContent.route)
+                }
+            )
+        }
+
+        composable(Routes.AdminUsers.route) {
+            UserManagementScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.AdminContent.route) {
+            ContentModerationScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
         // Create Post
         composable(Routes.CreatePost.route) {
             CreatePostScreen(
@@ -244,8 +294,7 @@ fun NavGraph(
                     navController.navigate(Routes.CreateSafeWalkRequest.route)
                 },
                 onNavigateToDetail = { requestId ->
-                    // For now, clicking details just refreshes the data
-                    // Can add a detail screen later if needed
+                    // Detail screen can be added later
                 }
             )
         }
