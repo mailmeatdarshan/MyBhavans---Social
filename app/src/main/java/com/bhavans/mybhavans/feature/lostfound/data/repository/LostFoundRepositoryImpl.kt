@@ -2,6 +2,8 @@ package com.bhavans.mybhavans.feature.lostfound.data.repository
 
 import android.net.Uri
 import com.bhavans.mybhavans.core.util.Resource
+import com.bhavans.mybhavans.core.util.uploadToCloudinary
+import com.bhavans.mybhavans.core.util.Constants
 import com.bhavans.mybhavans.feature.lostfound.domain.model.LostFoundCategory
 import com.bhavans.mybhavans.feature.lostfound.domain.model.LostFoundItem
 import com.bhavans.mybhavans.feature.lostfound.domain.model.LostFoundType
@@ -9,7 +11,6 @@ import com.bhavans.mybhavans.feature.lostfound.domain.repository.LostFoundReposi
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -21,8 +22,7 @@ import javax.inject.Singleton
 @Singleton
 class LostFoundRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val auth: FirebaseAuth,
-    private val storage: FirebaseStorage
+    private val auth: FirebaseAuth
 ) : LostFoundRepository {
 
     private val itemsCollection = firestore.collection("lostfound")
@@ -151,15 +151,9 @@ class LostFoundRepositoryImpl @Inject constructor(
                 return Resource.Error("Not authorized to delete this item")
             }
             
-            // Delete image if exists
-            item.imageUrl?.let { url ->
-                try {
-                    storage.getReferenceFromUrl(url).delete().await()
-                } catch (e: Exception) {
-                    // Ignore image deletion errors
-                }
-            }
-            
+            // Note: Cloudinary doesn't need explicit deletion here; the Cloudinary URL stored
+            // in Firestore is just a reference. Use Cloudinary dashboard or Admin API to purge
+            // if needed. For now, we simply delete the Firestore document.
             itemsCollection.document(itemId).delete().await()
             Resource.Success(Unit)
         } catch (e: Exception) {
@@ -186,11 +180,11 @@ class LostFoundRepositoryImpl @Inject constructor(
 
     override suspend fun uploadImage(uri: Uri): Resource<String> {
         return try {
-            val filename = "lostfound/${UUID.randomUUID()}.jpg"
-            val ref = storage.reference.child(filename)
-            ref.putFile(uri).await()
-            val downloadUrl = ref.downloadUrl.await()
-            Resource.Success(downloadUrl.toString())
+            val downloadUrl = uploadToCloudinary(
+                uri = uri,
+                folder = Constants.CLOUDINARY_LOST_FOUND_FOLDER
+            )
+            Resource.Success(downloadUrl)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to upload image")
         }

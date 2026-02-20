@@ -80,12 +80,14 @@ dependencies {
     ksp(libs.hilt.android.compiler)
     implementation(libs.hilt.navigation.compose)
 
-    // Firebase
+    // Firebase (Auth + Firestore + Messaging only — Storage replaced by Cloudinary)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.firestore.ktx)
-    implementation(libs.firebase.storage.ktx)
     implementation(libs.firebase.messaging.ktx)
+
+    // Cloudinary (image/file storage)
+    implementation(libs.cloudinary.android)
 
     // Coil
     implementation(libs.coil.compose)

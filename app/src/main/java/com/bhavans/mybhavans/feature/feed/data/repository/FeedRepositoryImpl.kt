@@ -2,6 +2,8 @@ package com.bhavans.mybhavans.feature.feed.data.repository
 
 import android.net.Uri
 import com.bhavans.mybhavans.core.util.Resource
+import com.bhavans.mybhavans.core.util.uploadToCloudinary
+import com.bhavans.mybhavans.core.util.Constants
 import com.bhavans.mybhavans.feature.feed.domain.model.Comment
 import com.bhavans.mybhavans.feature.feed.domain.model.Post
 import com.bhavans.mybhavans.feature.feed.domain.model.PostCategory
@@ -9,7 +11,6 @@ import com.bhavans.mybhavans.feature.feed.domain.repository.FeedRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -21,8 +22,7 @@ import javax.inject.Singleton
 @Singleton
 class FeedRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val auth: FirebaseAuth,
-    private val storage: FirebaseStorage
+    private val auth: FirebaseAuth
 ) : FeedRepository {
 
     private val postsCollection = firestore.collection("posts")
@@ -298,17 +298,10 @@ class FeedRepositoryImpl @Inject constructor(
 
     override suspend fun uploadImage(uri: Uri): Resource<String> {
         return try {
-            val currentUser = auth.currentUser 
-                ?: return Resource.Error("User not authenticated")
-            
-            val fileName = "${UUID.randomUUID()}.jpg"
-            val imageRef = storage.reference
-                .child("posts")
-                .child(currentUser.uid)
-                .child(fileName)
-            
-            imageRef.putFile(uri).await()
-            val downloadUrl = imageRef.downloadUrl.await().toString()
+            val downloadUrl = uploadToCloudinary(
+                uri = uri,
+                folder = Constants.CLOUDINARY_POST_IMAGES_FOLDER
+            )
             Resource.Success(downloadUrl)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to upload image")

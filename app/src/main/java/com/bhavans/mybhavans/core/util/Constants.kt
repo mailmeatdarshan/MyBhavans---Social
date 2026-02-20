@@ -16,10 +16,12 @@ object Constants {
     const val SKILL_REQUESTS_SUBCOLLECTION = "requests"
     const val SAFE_WALK_COLLECTION = "safeWalkRequests"
     
-    // Storage Paths
-    const val PROFILE_IMAGES_PATH = "profiles"
-    const val POST_IMAGES_PATH = "posts"
-    const val LOST_FOUND_IMAGES_PATH = "lostfound"
+    // Cloudinary Folders (replaces Firebase Storage paths)
+    const val CLOUDINARY_CLOUD_NAME = "deuhovrsy" 
+    const val CLOUDINARY_UPLOAD_PRESET = "mybhavans_unsigned" 
+    const val CLOUDINARY_PROFILE_FOLDER = "mybhavans/profiles"
+    const val CLOUDINARY_POST_IMAGES_FOLDER = "mybhavans/posts"
+    const val CLOUDINARY_LOST_FOUND_FOLDER = "mybhavans/lostfound"
     
     // Pagination
     const val DEFAULT_PAGE_SIZE = 20

@@ -3,12 +3,12 @@ package com.bhavans.mybhavans.feature.auth.data.repository
 import android.net.Uri
 import com.bhavans.mybhavans.core.util.Constants
 import com.bhavans.mybhavans.core.util.Resource
+import com.bhavans.mybhavans.core.util.uploadToCloudinary
 import com.bhavans.mybhavans.feature.auth.domain.model.User
 import com.bhavans.mybhavans.feature.auth.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -19,8 +19,7 @@ import javax.inject.Singleton
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth,
-    private val firestore: FirebaseFirestore,
-    private val storage: FirebaseStorage
+    private val firestore: FirebaseFirestore
 ) : AuthRepository {
 
     override val currentUser: Flow<User?> = callbackFlow {
@@ -188,20 +187,19 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun uploadProfilePhoto(imageUri: Uri): Resource<String> {
         return try {
             val currentUser = auth.currentUser ?: return Resource.Error("Not logged in")
-            val ref = storage.reference
-                .child(Constants.PROFILE_IMAGES_PATH)
-                .child("${currentUser.uid}.jpg")
 
-            ref.putFile(imageUri).await()
-            val downloadUrl = ref.downloadUrl.await().toString()
+            val downloadUrl = uploadToCloudinary(
+                uri = imageUri,
+                folder = Constants.CLOUDINARY_PROFILE_FOLDER
+            )
 
-            // Update the user's photoUrl in Firestore
+            // Update Firestore with the new Cloudinary URL
             firestore.collection(Constants.USERS_COLLECTION)
                 .document(currentUser.uid)
                 .update("photoUrl", downloadUrl)
                 .await()
 
-            // Update Firebase Auth photo
+            // Update Firebase Auth profile photo (optional display)
             val profileUpdates = userProfileChangeRequest {
                 photoUri = Uri.parse(downloadUrl)
             }

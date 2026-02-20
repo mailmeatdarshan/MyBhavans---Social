@@ -1,68 +1,92 @@
-# 🎓 MyBhavans - College Social Media App
+# 🎓 MyBhavans — College Social Media App
 
-A private, high-engagement community app exclusively for students and faculty of Bhavans College. Built with modern Android development practices using Kotlin, Jetpack Compose, and Firebase.
+A **private**, high-engagement community app exclusively for students and faculty of **Bhavans College**. Built with modern Android development using Kotlin, Jetpack Compose, and a Clean Architecture + MVVM pattern.
 
 ![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)
-![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+![Hilt](https://img.shields.io/badge/Hilt-DI-orange?style=for-the-badge)
+![Min SDK](https://img.shields.io/badge/Min%20SDK-26-green?style=for-the-badge)
 
 ---
 
 ## 📱 Features
 
-### 🔐 Secure Authentication
-- **College Email Only**: Signup restricted to `@bhavans.ac.in` email domain
-- **Email Verification**: Mandatory email verification for account activation
-- **Persistent Login**: Stay logged in across app restarts
-- **Password Reset**: Forgot password functionality via email
+### 🔐 Secure Authentication ✅
+- **College Email Only** — signup restricted to `@bhavans.ac.in` domain
+- **Email Verification** — mandatory verification before accessing the app
+- **Persistent Session** — stay logged in across app restarts
+- **Password Reset** — email-based forgot-password flow
+- **Profile Management** — update display name, bio, department, year, and profile photo
 
-### 📰 Unified Feed (Coming Soon)
+### 📰 Unified Feed ✅
 - Real-time social feed for campus updates
-- Post text, images, and videos
-- Like and comment on posts
-- Categories: General, Academic, Events, Announcements
+- Create, edit, and delete posts (text + image)
+- **Like & Comment** on posts with real-time counts
+- **Categories**: General, Academic, Events, Announcements
+- Post detail screen with full comment thread
 
-### 🛠️ Student Utility Hub (Planned)
-- **Lost & Found**: Report and find lost items on campus
-- **Canteen Tracker**: Real-time crowd levels in canteens
-- **Skill-Swap Marketplace**: Connect with peer tutors
+### 🔍 Explore ✅
+- Browse and discover content across categories
 
-### 🚶 Safety Features (Planned)
-- **Safe-Walk Buddy Finder**: Find walking companions for late hours
+### 🛠️ Student Utility Hub
+
+| Feature | Status |
+|---------|--------|
+| 🏷️ Lost & Found | ✅ Implemented |
+| 🍽️ Canteen Tracker | ✅ Implemented |
+| 🔄 Skill-Swap Marketplace | ✅ Implemented |
+
+#### 🏷️ Lost & Found ✅
+- Report **Lost** or **Found** items with photos
+- Category filtering (Electronics, Accessories, Documents, etc.)
+- Mark items as **Resolved** when found
+- Contact info attached to each listing
+
+#### 🍽️ Canteen Tracker ✅
+- Real-time crowd/status updates for campus canteens
+- Helps students plan meal timings
+
+#### 🔄 Skill-Swap Marketplace ✅
+- Post skills you **teach** or skills you **want to learn**
+- Filter by skill category and level
+- Send and receive **Match Requests** with custom messages
+- Accept/decline skill-swap requests
+
+### 🚶 Safe-Walk ✅
+- Find walking companions during late hours on campus
+- Real-time session management for safety coordination
+
+### 🛡️ Admin Panel ✅
+- Role-based access for college administrators
+- Content moderation and user management
 
 ---
 
 ## 🏗️ Architecture
 
-The app follows **Clean Architecture** with **MVVM** pattern:
+The app follows **Clean Architecture** with **MVVM** across three clear layers:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Presentation Layer                        │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
-│  │   Screens   │  │  ViewModels │  │   UI State/Events   │ │
-│  │  (Compose)  │  │   (Hilt)    │  │    (StateFlow)      │ │
-│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                   Presentation Layer                     │
+│  Compose Screens  ◄──►  ViewModels (Hilt)               │
+│                          ◄──► UI State (StateFlow)       │
+└─────────────────────────────┬───────────────────────────┘
                               │
                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      Domain Layer                            │
-│  ┌─────────────────────┐  ┌─────────────────────────────┐  │
-│  │   Repository        │  │      Domain Models          │  │
-│  │   Interfaces        │  │   (User, Post, Comment)     │  │
-│  └─────────────────────┘  └─────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                     Domain Layer                         │
+│  Repository Interfaces  +  Domain Models                 │
+│  (User, Post, Skill, LostFoundItem, etc.)               │
+└─────────────────────────────┬───────────────────────────┘
                               │
                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│                       Data Layer                             │
-│  ┌─────────────────────┐  ┌─────────────────────────────┐  │
-│  │    Repository       │  │      Firebase Services      │  │
-│  │  Implementations    │  │  (Auth, Firestore, Storage) │  │
-│  └─────────────────────┘  └─────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                      Data Layer                          │
+│  Repository Implementations  +  Backend Services         │
+│  (Auth, Database, File Storage)                          │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -72,129 +96,34 @@ The app follows **Clean Architecture** with **MVVM** pattern:
 ```
 com.bhavans.mybhavans/
 │
-├── 📁 core/                          # Shared utilities & configuration
-│   ├── 📁 di/                        # Dependency Injection (Hilt)
-│   │   ├── FirebaseModule.kt         # Provides Firebase instances
-│   │   └── RepositoryModule.kt       # Binds repository implementations
-│   ├── 📁 navigation/                # App navigation
-│   │   ├── NavGraph.kt               # Navigation graph with routes
-│   │   └── Routes.kt                 # Route definitions
-│   ├── 📁 ui/theme/                  # Material3 theming
-│   │   ├── Color.kt                  # Color palette
-│   │   ├── Theme.kt                  # App theme configuration
-│   │   └── Type.kt                   # Typography
-│   └── 📁 util/                      # Utility classes
-│       ├── Constants.kt              # App constants & Firestore paths
-│       └── Resource.kt               # Result wrapper (Success/Error/Loading)
+├── 📁 core/
+│   ├── 📁 di/                   # Hilt DI modules
+│   │   ├── FirebaseModule.kt    # Provides backend client(s)
+│   │   └── RepositoryModule.kt  # Binds repo interfaces to impls
+│   ├── 📁 navigation/
+│   │   ├── NavGraph.kt          # Navigation graph & routes
+│   │   └── Routes.kt
+│   ├── 📁 ui/theme/             # Material3: Color, Theme, Type
+│   └── 📁 util/
+│       ├── Constants.kt         # DB collection paths, roles
+│       └── Resource.kt          # Result wrapper (Success/Error/Loading)
 │
-├── 📁 feature/                       # Feature modules
-│   ├── 📁 auth/                      # Authentication feature
-│   │   ├── 📁 data/repository/       # Firebase Auth implementation
-│   │   ├── 📁 domain/                # User model & repository interface
-│   │   └── 📁 presentation/          # Login/SignUp screens & ViewModel
-│   ├── 📁 feed/                      # Feed feature (placeholder)
-│   ├── 📁 profile/                   # Profile feature (placeholder)
-│   ├── 📁 utilities/                 # Utilities hub (placeholder)
-│   └── 📁 main/                      # Main screen with bottom navigation
+├── 📁 feature/
+│   ├── 📁 auth/                 # Signup, Login, Profile
+│   ├── 📁 feed/                 # Posts, Likes, Comments
+│   ├── 📁 explore/              # Content discovery
+│   ├── 📁 lostfound/            # Lost & Found listings
+│   ├── 📁 canteen/              # Canteen crowd tracker
+│   ├── 📁 skillswap/            # Skill-Swap Marketplace
+│   ├── 📁 safewalk/             # Safe-Walk sessions
+│   ├── 📁 admin/                # Admin moderation panel
+│   ├── 📁 activity/             # Activity/notification feed
+│   ├── 📁 profile/              # User profile screen
+│   ├── 📁 utilities/            # Utilities hub screen
+│   └── 📁 main/                 # Main screen + bottom nav
 │
-├── MainActivity.kt                   # Single Activity entry point
-└── MyBhavansApp.kt                   # Application class with @HiltAndroidApp
-```
-
----
-
-## 🔑 Key Components Explained
-
-### Authentication Module
-
-| File | Purpose |
-|------|---------|
-| `AuthRepository.kt` | Interface defining auth operations (signUp, signIn, signOut, etc.) |
-| `AuthRepositoryImpl.kt` | Firebase implementation with email validation and Firestore user creation |
-| `AuthViewModel.kt` | Manages auth state, handles user events, coordinates between UI and repository |
-| `AuthState.kt` | Data class holding UI state (loading, error, user info, validation flags) |
-| `LoginScreen.kt` | Compose UI for login with email/password fields |
-| `SignUpScreen.kt` | Compose UI for registration with name, email, password |
-
-### How Authentication Works
-
-```
-User taps "Sign Up"
-        │
-        ▼
-┌─────────────────────────────────────┐
-│  AuthViewModel.onEvent(SignUp)      │
-│  - Validates email domain           │
-│  - Validates password length        │
-└─────────────────────────────────────┘
-        │
-        ▼
-┌─────────────────────────────────────┐
-│  AuthRepositoryImpl.signUp()        │
-│  1. Check @bhavans.ac.in domain     │
-│  2. Create Firebase Auth account    │
-│  3. Update display name             │
-│  4. Create Firestore user document  │
-│  5. Send verification email         │
-└─────────────────────────────────────┘
-        │
-        ▼
-┌─────────────────────────────────────┐
-│  Returns Resource.Success(User)     │
-│  - ViewModel updates AuthState      │
-│  - UI navigates to MainScreen       │
-└─────────────────────────────────────┘
-```
-
-### Navigation Flow
-
-```
-App Launch
-    │
-    ├── User NOT logged in ──► LoginScreen ──► SignUpScreen
-    │                                │              │
-    │                                └──────┬───────┘
-    │                                       │
-    │                                       ▼
-    │                              (Auth Success)
-    │                                       │
-    └── User IS logged in ─────────────────►│
-                                            ▼
-                                      MainScreen
-                                    ┌─────┼─────┐
-                                    ▼     ▼     ▼
-                                  Feed  Utils  Profile
-                                   Tab   Tab    Tab
-```
-
-### Dependency Injection (Hilt)
-
-| Module | Provides |
-|--------|----------|
-| `FirebaseModule` | FirebaseAuth, FirebaseFirestore, FirebaseStorage singletons |
-| `RepositoryModule` | Binds AuthRepository interface to AuthRepositoryImpl |
-
----
-
-## 🗄️ Firestore Database Schema
-
-### Users Collection (`/users/{userId}`)
-
-```javascript
-{
-  uid: "abc123",                    // Firebase Auth UID
-  email: "john@bhavans.ac.in",      // College email
-  displayName: "John Doe",          // User's name
-  photoUrl: "",                     // Profile picture URL
-  department: "",                   // Academic department
-  year: null,                       // Year of study (1-4)
-  role: "student",                  // student | faculty | admin
-  bio: "",                          // Short bio
-  skills: [],                       // List of skills
-  isVerified: false,                // Email verified?
-  createdAt: Timestamp,             // Account creation
-  lastActiveAt: Timestamp           // Last activity
-}
+├── MainActivity.kt              # Single-Activity entry point
+└── MyBhavansApp.kt              # @HiltAndroidApp Application class
 ```
 
 ---
@@ -204,69 +133,134 @@ App Launch
 | Technology | Purpose |
 |------------|---------|
 | **Kotlin** | Primary language |
-| **Jetpack Compose** | Declarative UI framework |
+| **Jetpack Compose** | Declarative UI |
 | **Material3** | Design system |
-| **Navigation Compose** | Screen navigation |
+| **Navigation Compose** | Screen routing |
 | **Hilt** | Dependency injection |
-| **Firebase Auth** | User authentication |
-| **Firebase Firestore** | NoSQL database |
-| **Firebase Storage** | File/image storage |
+| **Coroutines + Flow** | Async & reactive streams |
 | **Coil** | Image loading |
-| **Coroutines + Flow** | Async operations & reactive streams |
+| **DataStore** | Local preference storage |
+| **Firebase Auth** | User authentication |
+| **Firebase Firestore** | Real-time NoSQL database |
+| **Cloudinary** | Image/file storage (free 25 GB tier) |
+| **Firebase Messaging** | Push notifications |
+
+---
+
+## 🗄️ Database Schema
+
+### Users (`/users/{uid}`)
+```
+uid, email, displayName, photoUrl, department, year,
+role (student|faculty|admin), bio, gender, skills[],
+isVerified, postsCount, followersCount, followingCount,
+createdAt, lastActiveAt
+```
+
+### Posts (`/posts/{postId}`)
+```
+authorId, authorName, authorPhotoUrl, content, imageUrl,
+category (GENERAL|ACADEMIC|EVENTS|ANNOUNCEMENTS),
+likes[], commentCount, createdAt, updatedAt
+```
+
+### Comments (`/posts/{postId}/comments/{commentId}`)
+```
+authorId, authorName, authorPhotoUrl, content, createdAt
+```
+
+### Lost & Found (`/lostfound/{itemId}`)
+```
+title, description, type (LOST|FOUND), category,
+location, imageUrl, authorId, authorName, contactNumber,
+isResolved, createdAt
+```
+
+### Skills (`/skills/{skillId}`)
+```
+userId, userName, title, description, category, level,
+isTeaching, lookingFor[], availability, contactPreference,
+isActive, createdAt, updatedAt
+```
+
+### Skill Matches (`/skill_matches/{matchId}`)
+```
+requesterId, requesterName, providerId, providerName,
+skillId, skillTitle, message, status (PENDING|ACCEPTED|REJECTED),
+createdAt
+```
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-
-- Android Studio Hedgehog or newer
+- Android Studio Hedgehog (or newer)
 - JDK 17
-- Android device/emulator (API 26+)
-- Firebase project configured
+- Android device / emulator (API 26+)
+- Firebase project with Auth and Firestore enabled
+- Cloudinary account (free tier)
 
 ### Setup
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/MyBhavans.git
+   git clone https://github.com/mailmeatdarshan/MyBhavans.git
    cd MyBhavans
    ```
 
-2. **Firebase Configuration**
-   - Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
-   - Add Android app with package: `com.bhavans.mybhavans`
-   - Download `google-services.json` to `/app/` directory
-   - Enable Email/Password authentication
-   - Create Firestore database
+2. **Configure Firebase**
+   - Go to [console.firebase.google.com](https://console.firebase.google.com)
+   - Create a project → Add Android app with package `com.bhavans.mybhavans`
+   - Download `google-services.json` → place it in `/app/`
+   - Enable **Email/Password** authentication
+   - Create a Firestore database (start in test mode, then apply security rules)
 
-3. **Build & Run**
+3. **Configure Cloudinary** (replaces Firebase Storage — free 25 GB tier)
+   - Sign up at [cloudinary.com](https://cloudinary.com) (free)
+   - In your Cloudinary Dashboard → Settings → Upload → create an **unsigned upload preset** named `mybhavans_unsigned`
+   - Copy your **Cloud name** from the dashboard
+   - Open `Constants.kt` and replace:
+     ```kotlin
+     const val CLOUDINARY_CLOUD_NAME = "YOUR_CLOUD_NAME"  // ← your cloud name here
+     ```
+
+4. **Build & Run**
    ```bash
-   ./gradlew clean build
+   ./gradlew clean assembleDebug
    ./gradlew installDebug
    ```
 
 ---
 
-## 📋 Current Status
+## 📋 Development Status
 
 | Phase | Status | Description |
 |-------|--------|-------------|
-| Phase 1: Core Infrastructure | ✅ Complete | Dependencies, DI, theme, navigation |
-| Phase 2: Authentication | ✅ Complete | Login, signup, email verification |
-| Phase 3: Feed System | 🔄 Pending | Posts, likes, comments |
-| Phase 4: Utilities Hub | 📋 Planned | Lost & Found, Canteen, Skills |
-| Phase 5: Safety Features | 📋 Planned | Safe-Walk |
-| Phase 6: Testing & Polish | 📋 Planned | Tests, security, performance |
+| Phase 1: Core Infrastructure | ✅ Complete | DI, theme, navigation, utilities |
+| Phase 2: Authentication | ✅ Complete | Signup, login, email verification, profile |
+| Phase 3: Unified Feed | ✅ Complete | Posts, likes, comments, real-time updates |
+| Phase 4: Utilities Hub | ✅ Complete | Lost & Found, Canteen, Skill-Swap |
+| Phase 5: Safety Features | ✅ Complete | Safe-Walk buddy sessions |
+| Phase 6: Admin Panel | ✅ Complete | Moderation dashboard |
+| Phase 7: Testing & Polish | 🔄 In Progress | Tests, security rules, performance |
+
+---
+
+## 🔒 Security Notes
+
+- All users must use a verified `@bhavans.ac.in` email — non-college signups are rejected at the app layer
+- Firestore Security Rules should restrict reads/writes to authenticated users only
+- Profile photos are stored in Firebase Storage with user-scoped paths
 
 ---
 
 ## 📄 License
 
-This project is for educational purposes as part of Bhavans College.
+This project is developed for educational purposes as part of Bhavans College.
 
 ---
 
 ## 👨‍💻 Developer
 
-Made with ❤️ by Dubey
+Made with ❤️ by **Dubey** — [github.com/mailmeatdarshan](https://github.com/mailmeatdarshan)
