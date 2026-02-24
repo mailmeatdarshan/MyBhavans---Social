@@ -1,6 +1,9 @@
 package com.bhavans.mybhavans.core.navigation
 
 sealed class Routes(val route: String) {
+    // Splash
+    data object Splash : Routes("splash")
+
     // Auth Routes
     data object Login : Routes("login")
     data object SignUp : Routes("signup")

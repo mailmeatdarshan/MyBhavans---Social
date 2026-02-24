@@ -3,7 +3,9 @@ package com.bhavans.mybhavans.feature.feed.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bhavans.mybhavans.core.util.Resource
+import com.bhavans.mybhavans.feature.activity.domain.repository.ActivityRepository
 import com.bhavans.mybhavans.feature.feed.domain.repository.FeedRepository
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +18,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FeedViewModel @Inject constructor(
-    private val feedRepository: FeedRepository
+    private val feedRepository: FeedRepository,
+    private val activityRepository: ActivityRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FeedState())
@@ -86,6 +89,19 @@ class FeedViewModel @Inject constructor(
     private fun likePost(postId: String) {
         viewModelScope.launch {
             feedRepository.likePost(postId)
+            // Create notification for post author
+            val post = _state.value.posts.find { it.id == postId }
+            if (post != null) {
+                val user = FirebaseAuth.getInstance().currentUser
+                activityRepository.createNotification(
+                    targetUserId = post.authorId,
+                    type = "LIKE",
+                    actorName = user?.displayName ?: "Someone",
+                    actorPhotoUrl = user?.photoUrl?.toString() ?: "",
+                    postId = postId,
+                    message = "liked your post"
+                )
+            }
         }
     }
 
@@ -230,6 +246,19 @@ class FeedViewModel @Inject constructor(
                         it.copy(
                             isAddingComment = false,
                             commentText = ""
+                        )
+                    }
+                    // Create notification for post author
+                    val post = _state.value.selectedPost
+                    if (post != null) {
+                        val user = FirebaseAuth.getInstance().currentUser
+                        activityRepository.createNotification(
+                            targetUserId = post.authorId,
+                            type = "COMMENT",
+                            actorName = user?.displayName ?: "Someone",
+                            actorPhotoUrl = user?.photoUrl?.toString() ?: "",
+                            postId = postId,
+                            message = "commented on your post"
                         )
                     }
                 }

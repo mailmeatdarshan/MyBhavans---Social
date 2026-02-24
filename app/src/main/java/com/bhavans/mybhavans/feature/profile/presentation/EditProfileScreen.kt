@@ -248,6 +248,48 @@ fun EditProfileScreen(
                 label = "Year"
             )
 
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Social Links section
+            Text(
+                text = "Social Links",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+            )
+
+            ProfileTextField(
+                value = state.editInstagram,
+                onValueChange = { viewModel.onEvent(ProfileEvent.InstagramChanged(it)) },
+                label = "Instagram URL"
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            ProfileTextField(
+                value = state.editTwitter,
+                onValueChange = { viewModel.onEvent(ProfileEvent.TwitterChanged(it)) },
+                label = "Twitter / X URL"
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            ProfileTextField(
+                value = state.editLinkedIn,
+                onValueChange = { viewModel.onEvent(ProfileEvent.LinkedInChanged(it)) },
+                label = "LinkedIn URL"
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            ProfileTextField(
+                value = state.editGitHub,
+                onValueChange = { viewModel.onEvent(ProfileEvent.GitHubChanged(it)) },
+                label = "GitHub URL"
+            )
+
             Spacer(modifier = Modifier.height(32.dp))
 
             // Save button

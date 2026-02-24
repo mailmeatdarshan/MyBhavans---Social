@@ -65,4 +65,10 @@ abstract class RepositoryModule {
     abstract fun bindAdminRepository(
         adminRepositoryImpl: AdminRepositoryImpl
     ): AdminRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindActivityRepository(
+        activityRepositoryImpl: com.bhavans.mybhavans.feature.activity.data.repository.ActivityRepositoryImpl
+    ): com.bhavans.mybhavans.feature.activity.domain.repository.ActivityRepository
 }

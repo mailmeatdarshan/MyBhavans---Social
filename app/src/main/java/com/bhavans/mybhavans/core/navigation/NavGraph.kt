@@ -25,11 +25,13 @@ import com.bhavans.mybhavans.feature.lostfound.presentation.LostFoundDetailScree
 import com.bhavans.mybhavans.feature.lostfound.presentation.LostFoundScreen
 import com.bhavans.mybhavans.feature.main.MainScreen
 import com.bhavans.mybhavans.feature.profile.presentation.EditProfileScreen
+import com.bhavans.mybhavans.feature.profile.presentation.UserProfileScreen
 import com.bhavans.mybhavans.feature.safewalk.presentation.CreateWalkRequestScreen
 import com.bhavans.mybhavans.feature.safewalk.presentation.SafeWalkScreen
 import com.bhavans.mybhavans.feature.skillswap.presentation.CreateSkillScreen
 import com.bhavans.mybhavans.feature.skillswap.presentation.SkillDetailScreen
 import com.bhavans.mybhavans.feature.skillswap.presentation.SkillSwapScreen
+import com.bhavans.mybhavans.feature.splash.SplashScreen
 
 @Composable
 fun NavGraph(
@@ -37,17 +39,27 @@ fun NavGraph(
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val authState by authViewModel.authState.collectAsState()
-    
-    val startDestination = if (authState.isLoggedIn) {
-        Routes.Main.route
-    } else {
-        Routes.Login.route
-    }
 
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = Routes.Splash.route
     ) {
+        // Splash Screen
+        composable(Routes.Splash.route) {
+            SplashScreen(
+                onSplashComplete = {
+                    val destination = if (authState.isLoggedIn) {
+                        Routes.Main.route
+                    } else {
+                        Routes.Login.route
+                    }
+                    navController.navigate(destination) {
+                        popUpTo(Routes.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         // Auth Flow
         composable(Routes.Login.route) {
             LoginScreen(
@@ -102,6 +114,9 @@ fun NavGraph(
                 onNavigateToAdmin = {
                     navController.navigate(Routes.AdminDashboard.route)
                 },
+                onNavigateToUserProfile = { userId ->
+                    navController.navigate(Routes.UserProfile.createRoute(userId))
+                },
                 onLogout = {
                     authViewModel.signOut()
                     navController.navigate(Routes.Login.route) {
@@ -114,6 +129,22 @@ fun NavGraph(
         // Edit Profile
         composable(Routes.EditProfile.route) {
             EditProfileScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // User Profile (public)
+        composable(
+            route = Routes.UserProfile.route,
+            arguments = listOf(
+                navArgument("userId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+            UserProfileScreen(
+                userId = userId,
                 onNavigateBack = {
                     navController.popBackStack()
                 }
@@ -294,7 +325,7 @@ fun NavGraph(
                     navController.navigate(Routes.CreateSafeWalkRequest.route)
                 },
                 onNavigateToDetail = { requestId ->
-                    // Detail screen can be added later
+                    // Safe walk detail not needed — accept/cancel done inline
                 }
             )
         }

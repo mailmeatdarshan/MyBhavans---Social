@@ -35,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -49,6 +50,7 @@ import com.google.firebase.auth.FirebaseAuth
 fun FeedScreen(
     onNavigateToCreatePost: () -> Unit,
     onNavigateToPostDetail: (String) -> Unit,
+    onNavigateToUserProfile: ((String) -> Unit)? = null,
     viewModel: FeedViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -73,9 +75,21 @@ fun FeedScreen(
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = androidx.compose.ui.graphics.Color.Transparent
+                    containerColor = Color.Transparent
                 )
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onNavigateToCreatePost,
+                containerColor = BhavansPrimary,
+                contentColor = Color.White
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Create Post"
+                )
+            }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
@@ -135,8 +149,8 @@ fun FeedScreen(
                     else -> {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            contentPadding = PaddingValues(bottom = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             items(
                                 items = state.posts,
@@ -149,7 +163,8 @@ fun FeedScreen(
                                     onUnlikeClick = { viewModel.onEvent(FeedEvent.UnlikePost(post.id)) },
                                     onCommentClick = { onNavigateToPostDetail(post.id) },
                                     onDeleteClick = { viewModel.onEvent(FeedEvent.DeletePost(post.id)) },
-                                    onClick = { onNavigateToPostDetail(post.id) }
+                                    onClick = { onNavigateToPostDetail(post.id) },
+                                    onProfileClick = onNavigateToUserProfile
                                 )
                             }
                         }

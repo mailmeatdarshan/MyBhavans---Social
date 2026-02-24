@@ -21,7 +21,17 @@ data class Canteen(
     val closeTime: String = "18:00",
     val specialItems: List<String> = emptyList(),
     val avgWaitTime: Int = 10, // in minutes
-    val lastUpdated: Long = System.currentTimeMillis()
+    val lastUpdated: Long = System.currentTimeMillis(),
+    val menuItems: List<MenuItem> = emptyList(),
+    val totalSeats: Int = 100,
+    val occupiedSeats: Int = 0
+)
+
+data class MenuItem(
+    val name: String = "",
+    val price: Double = 0.0,
+    val category: String = "General",
+    val isAvailable: Boolean = true
 )
 
 data class CheckIn(

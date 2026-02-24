@@ -27,4 +27,10 @@ interface AuthRepository {
     suspend fun uploadProfilePhoto(imageUri: Uri): Resource<String>
 
     suspend fun getUserProfile(uid: String): Resource<User>
+
+    suspend fun followUser(targetUserId: String): Resource<Unit>
+
+    suspend fun unfollowUser(targetUserId: String): Resource<Unit>
+
+    suspend fun isFollowing(targetUserId: String): Boolean
 }

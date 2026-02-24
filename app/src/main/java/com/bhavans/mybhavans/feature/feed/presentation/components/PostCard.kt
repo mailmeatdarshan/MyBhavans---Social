@@ -21,20 +21,23 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Send
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,19 +51,25 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.bhavans.mybhavans.core.ui.theme.AccentPink
+import com.bhavans.mybhavans.core.ui.theme.ErrorColor
 import com.bhavans.mybhavans.core.ui.theme.StoryRingGradient
 import com.bhavans.mybhavans.feature.feed.domain.model.Post
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun PostCard(
     post: Post,
     currentUserId: String,
     onLikeClick: () -> Unit,
+    onUnlikeClick: () -> Unit,
     onCommentClick: () -> Unit,
-    onPostClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    onClick: () -> Unit,
+    onProfileClick: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    val isLiked = post.likedBy.contains(currentUserId)
+    val isLiked = post.isLikedBy(currentUserId)
+    val isOwnPost = post.authorId == currentUserId
 
     val heartColor by animateColorAsState(
         targetValue = if (isLiked) AccentPink else MaterialTheme.colorScheme.onSurface,
@@ -68,10 +77,12 @@ fun PostCard(
         label = "heartColor"
     )
 
+    var showMenu by remember { mutableStateOf(false) }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onPostClick)
+            .clickable(onClick = onClick)
     ) {
         // Header — Author row
         Row(
@@ -91,13 +102,16 @@ fun PostCard(
                     )
                     .padding(2.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable {
+                        onProfileClick?.invoke(post.authorId)
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 if (post.authorPhotoUrl.isNotEmpty()) {
                     AsyncImage(
                         model = post.authorPhotoUrl,
-                        contentDescription = null,
+                        contentDescription = "${post.authorName}'s photo",
                         modifier = Modifier
                             .size(30.dp)
                             .clip(CircleShape),
@@ -114,34 +128,63 @@ fun PostCard(
 
             Spacer(modifier = Modifier.width(10.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable {
+                        onProfileClick?.invoke(post.authorId)
+                    }
+            ) {
                 Text(
                     text = post.authorName,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold
                 )
-                if (post.category.isNotEmpty()) {
+                if (post.category.displayName.isNotEmpty()) {
                     Text(
-                        text = post.category,
+                        text = post.category.displayName,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            IconButton(onClick = { }) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "More",
-                    modifier = Modifier.size(20.dp)
-                )
+            Box {
+                IconButton(onClick = { showMenu = true }) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "More",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    if (isOwnPost) {
+                        DropdownMenuItem(
+                            text = { Text("Delete Post", color = ErrorColor) },
+                            onClick = {
+                                showMenu = false
+                                onDeleteClick()
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = null,
+                                    tint = ErrorColor
+                                )
+                            }
+                        )
+                    }
+                }
             }
         }
 
         // Image (if available)
-        if (post.imageUrls.isNotEmpty()) {
+        if (post.imageUrl.isNotEmpty()) {
             AsyncImage(
-                model = post.imageUrls.first(),
+                model = post.imageUrl,
                 contentDescription = "Post image",
                 modifier = Modifier
                     .fillMaxWidth()
@@ -157,14 +200,16 @@ fun PostCard(
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Like
+            // Like / Unlike
             IconButton(
-                onClick = onLikeClick,
+                onClick = {
+                    if (isLiked) onUnlikeClick() else onLikeClick()
+                },
                 modifier = Modifier.size(40.dp)
             ) {
                 Icon(
                     imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = "Like",
+                    contentDescription = if (isLiked) "Unlike" else "Like",
                     tint = heartColor,
                     modifier = Modifier.size(24.dp)
                 )
@@ -196,9 +241,9 @@ fun PostCard(
         }
 
         // Likes count
-        if (post.likesCount > 0) {
+        if (post.likeCount > 0) {
             Text(
-                text = "${post.likesCount} like${if (post.likesCount > 1) "s" else ""}",
+                text = "${post.likeCount} like${if (post.likeCount > 1) "s" else ""}",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(horizontal = 14.dp)
@@ -223,9 +268,9 @@ fun PostCard(
         }
 
         // Comments count
-        if (post.commentsCount > 0) {
+        if (post.commentCount > 0) {
             Text(
-                text = "View all ${post.commentsCount} comments",
+                text = "View all ${post.commentCount} comments",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 2.dp)

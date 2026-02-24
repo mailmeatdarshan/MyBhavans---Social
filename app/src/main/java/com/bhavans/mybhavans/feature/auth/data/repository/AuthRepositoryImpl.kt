@@ -8,6 +8,7 @@ import com.bhavans.mybhavans.feature.auth.domain.model.User
 import com.bhavans.mybhavans.feature.auth.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.userProfileChangeRequest
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -44,7 +45,10 @@ class AuthRepositoryImpl @Inject constructor(
                                 isVerified = snapshot.getBoolean("isVerified") ?: firebaseUser.isEmailVerified,
                                 postsCount = snapshot.getLong("postsCount")?.toInt() ?: 0,
                                 followersCount = snapshot.getLong("followersCount")?.toInt() ?: 0,
-                                followingCount = snapshot.getLong("followingCount")?.toInt() ?: 0
+                                followingCount = snapshot.getLong("followingCount")?.toInt() ?: 0,
+                                socialLinks = @Suppress("UNCHECKED_CAST") ((snapshot.get("socialLinks") as? Map<String, String>) ?: emptyMap()),
+                                followers = (snapshot.get("followers") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                                following = (snapshot.get("following") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
                             )
                             trySend(user)
                         } else {
@@ -233,7 +237,10 @@ class AuthRepositoryImpl @Inject constructor(
                     isVerified = snapshot.getBoolean("isVerified") ?: false,
                     postsCount = snapshot.getLong("postsCount")?.toInt() ?: 0,
                     followersCount = snapshot.getLong("followersCount")?.toInt() ?: 0,
-                    followingCount = snapshot.getLong("followingCount")?.toInt() ?: 0
+                    followingCount = snapshot.getLong("followingCount")?.toInt() ?: 0,
+                    socialLinks = @Suppress("UNCHECKED_CAST") ((snapshot.get("socialLinks") as? Map<String, String>) ?: emptyMap()),
+                    followers = (snapshot.get("followers") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                    following = (snapshot.get("following") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
                 )
                 Resource.Success(user)
             } else {
@@ -241,6 +248,68 @@ class AuthRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to get user profile")
+        }
+    }
+
+    override suspend fun followUser(targetUserId: String): Resource<Unit> {
+        return try {
+            val currentUser = auth.currentUser ?: return Resource.Error("Not logged in")
+            val usersRef = firestore.collection(Constants.USERS_COLLECTION)
+
+            // Add targetUserId to current user's following list
+            usersRef.document(currentUser.uid)
+                .update(
+                    "following", FieldValue.arrayUnion(targetUserId),
+                    "followingCount", FieldValue.increment(1)
+                ).await()
+
+            // Add current user to target's followers list
+            usersRef.document(targetUserId)
+                .update(
+                    "followers", FieldValue.arrayUnion(currentUser.uid),
+                    "followersCount", FieldValue.increment(1)
+                ).await()
+
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to follow user")
+        }
+    }
+
+    override suspend fun unfollowUser(targetUserId: String): Resource<Unit> {
+        return try {
+            val currentUser = auth.currentUser ?: return Resource.Error("Not logged in")
+            val usersRef = firestore.collection(Constants.USERS_COLLECTION)
+
+            usersRef.document(currentUser.uid)
+                .update(
+                    "following", FieldValue.arrayRemove(targetUserId),
+                    "followingCount", FieldValue.increment(-1)
+                ).await()
+
+            usersRef.document(targetUserId)
+                .update(
+                    "followers", FieldValue.arrayRemove(currentUser.uid),
+                    "followersCount", FieldValue.increment(-1)
+                ).await()
+
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to unfollow user")
+        }
+    }
+
+    override suspend fun isFollowing(targetUserId: String): Boolean {
+        return try {
+            val currentUser = auth.currentUser ?: return false
+            val snapshot = firestore.collection(Constants.USERS_COLLECTION)
+                .document(currentUser.uid)
+                .get()
+                .await()
+            val following = (snapshot.get("following") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+            following.contains(targetUserId)
+        } catch (e: Exception) {
+            false
         }
     }
 
@@ -259,6 +328,9 @@ class AuthRepositoryImpl @Inject constructor(
         "postsCount" to postsCount,
         "followersCount" to followersCount,
         "followingCount" to followingCount,
+        "socialLinks" to socialLinks,
+        "followers" to followers,
+        "following" to following,
         "createdAt" to com.google.firebase.Timestamp.now(),
         "lastActiveAt" to com.google.firebase.Timestamp.now()
     )
@@ -271,6 +343,7 @@ class AuthRepositoryImpl @Inject constructor(
         "bio" to bio,
         "gender" to gender,
         "skills" to skills,
+        "socialLinks" to socialLinks,
         "lastActiveAt" to com.google.firebase.Timestamp.now()
     )
 }

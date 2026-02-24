@@ -60,6 +60,7 @@ fun MainScreen(
     onNavigateToSafeWalk: () -> Unit,
     onNavigateToEditProfile: () -> Unit,
     onNavigateToAdmin: () -> Unit,
+    onNavigateToUserProfile: (String) -> Unit,
     onLogout: () -> Unit
 ) {
     val navItems = listOf(
@@ -148,7 +149,8 @@ fun MainScreen(
             ) {
                 FeedScreen(
                     onNavigateToCreatePost = onNavigateToCreatePost,
-                    onNavigateToPostDetail = onNavigateToPostDetail
+                    onNavigateToPostDetail = onNavigateToPostDetail,
+                    onNavigateToUserProfile = onNavigateToUserProfile
                 )
             }
             AnimatedVisibility(

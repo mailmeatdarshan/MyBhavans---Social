@@ -14,5 +14,8 @@ data class User(
     val isVerified: Boolean = false,
     val postsCount: Int = 0,
     val followersCount: Int = 0,
-    val followingCount: Int = 0
+    val followingCount: Int = 0,
+    val socialLinks: Map<String, String> = emptyMap(),
+    val followers: List<String> = emptyList(),
+    val following: List<String> = emptyList()
 )

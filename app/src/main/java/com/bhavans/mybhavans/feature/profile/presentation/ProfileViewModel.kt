@@ -26,6 +26,10 @@ data class ProfileState(
     val editGender: String = "",
     val editDepartment: String = "",
     val editYear: String = "",
+    val editInstagram: String = "",
+    val editTwitter: String = "",
+    val editLinkedIn: String = "",
+    val editGitHub: String = "",
     val selectedPhotoUri: Uri? = null
 )
 
@@ -36,6 +40,10 @@ sealed class ProfileEvent {
     data class DepartmentChanged(val department: String) : ProfileEvent()
     data class YearChanged(val year: String) : ProfileEvent()
     data class PhotoSelected(val uri: Uri) : ProfileEvent()
+    data class InstagramChanged(val url: String) : ProfileEvent()
+    data class TwitterChanged(val url: String) : ProfileEvent()
+    data class LinkedInChanged(val url: String) : ProfileEvent()
+    data class GitHubChanged(val url: String) : ProfileEvent()
     data object SaveProfile : ProfileEvent()
     data object ClearError : ProfileEvent()
     data object ResetSaveSuccess : ProfileEvent()
@@ -48,6 +56,9 @@ class ProfileViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(ProfileState())
     val state: StateFlow<ProfileState> = _state.asStateFlow()
+
+    private val _userProfileState = MutableStateFlow(UserProfileState())
+    val userProfileState: StateFlow<UserProfileState> = _userProfileState.asStateFlow()
 
     init {
         observeUser()
@@ -63,7 +74,11 @@ class ProfileViewModel @Inject constructor(
                         editBio = if (it.editBio.isEmpty()) user?.bio ?: "" else it.editBio,
                         editGender = if (it.editGender.isEmpty()) user?.gender ?: "" else it.editGender,
                         editDepartment = if (it.editDepartment.isEmpty()) user?.department ?: "" else it.editDepartment,
-                        editYear = if (it.editYear.isEmpty()) (user?.year?.toString() ?: "") else it.editYear
+                        editYear = if (it.editYear.isEmpty()) (user?.year?.toString() ?: "") else it.editYear,
+                        editInstagram = if (it.editInstagram.isEmpty()) user?.socialLinks?.get("instagram") ?: "" else it.editInstagram,
+                        editTwitter = if (it.editTwitter.isEmpty()) user?.socialLinks?.get("twitter") ?: "" else it.editTwitter,
+                        editLinkedIn = if (it.editLinkedIn.isEmpty()) user?.socialLinks?.get("linkedin") ?: "" else it.editLinkedIn,
+                        editGitHub = if (it.editGitHub.isEmpty()) user?.socialLinks?.get("github") ?: "" else it.editGitHub
                     )
                 }
             }
@@ -79,6 +94,10 @@ class ProfileViewModel @Inject constructor(
                 editGender = user?.gender ?: "",
                 editDepartment = user?.department ?: "",
                 editYear = user?.year?.toString() ?: "",
+                editInstagram = user?.socialLinks?.get("instagram") ?: "",
+                editTwitter = user?.socialLinks?.get("twitter") ?: "",
+                editLinkedIn = user?.socialLinks?.get("linkedin") ?: "",
+                editGitHub = user?.socialLinks?.get("github") ?: "",
                 selectedPhotoUri = null,
                 saveSuccess = false
             )
@@ -105,12 +124,81 @@ class ProfileViewModel @Inject constructor(
             is ProfileEvent.PhotoSelected -> {
                 _state.update { it.copy(selectedPhotoUri = event.uri) }
             }
+            is ProfileEvent.InstagramChanged -> {
+                _state.update { it.copy(editInstagram = event.url) }
+            }
+            is ProfileEvent.TwitterChanged -> {
+                _state.update { it.copy(editTwitter = event.url) }
+            }
+            is ProfileEvent.LinkedInChanged -> {
+                _state.update { it.copy(editLinkedIn = event.url) }
+            }
+            is ProfileEvent.GitHubChanged -> {
+                _state.update { it.copy(editGitHub = event.url) }
+            }
             is ProfileEvent.SaveProfile -> saveProfile()
             is ProfileEvent.ClearError -> {
                 _state.update { it.copy(error = null) }
             }
             is ProfileEvent.ResetSaveSuccess -> {
                 _state.update { it.copy(saveSuccess = false) }
+            }
+        }
+    }
+
+    fun loadUserProfile(userId: String) {
+        viewModelScope.launch {
+            _userProfileState.update { it.copy(isLoading = true, error = null) }
+            when (val result = authRepository.getUserProfile(userId)) {
+                is Resource.Success -> {
+                    val isFollowing = authRepository.isFollowing(userId)
+                    _userProfileState.update {
+                        it.copy(
+                            isLoading = false,
+                            user = result.data,
+                            isFollowing = isFollowing
+                        )
+                    }
+                }
+                is Resource.Error -> {
+                    _userProfileState.update {
+                        it.copy(isLoading = false, error = result.message)
+                    }
+                }
+                is Resource.Loading -> {}
+            }
+        }
+    }
+
+    fun followUser(userId: String) {
+        viewModelScope.launch {
+            _userProfileState.update { it.copy(isFollowLoading = true) }
+            when (authRepository.followUser(userId)) {
+                is Resource.Success -> {
+                    // Refresh profile to get updated counts
+                    loadUserProfile(userId)
+                    _userProfileState.update { it.copy(isFollowLoading = false, isFollowing = true) }
+                }
+                is Resource.Error -> {
+                    _userProfileState.update { it.copy(isFollowLoading = false) }
+                }
+                is Resource.Loading -> {}
+            }
+        }
+    }
+
+    fun unfollowUser(userId: String) {
+        viewModelScope.launch {
+            _userProfileState.update { it.copy(isFollowLoading = true) }
+            when (authRepository.unfollowUser(userId)) {
+                is Resource.Success -> {
+                    loadUserProfile(userId)
+                    _userProfileState.update { it.copy(isFollowLoading = false, isFollowing = false) }
+                }
+                is Resource.Error -> {
+                    _userProfileState.update { it.copy(isFollowLoading = false) }
+                }
+                is Resource.Loading -> {}
             }
         }
     }
@@ -150,6 +238,13 @@ class ProfileViewModel @Inject constructor(
                 _state.update { it.copy(isUploadingPhoto = false) }
             }
 
+            // Build social links map
+            val socialLinks = mutableMapOf<String, String>()
+            if (state.editInstagram.isNotBlank()) socialLinks["instagram"] = state.editInstagram.trim()
+            if (state.editTwitter.isNotBlank()) socialLinks["twitter"] = state.editTwitter.trim()
+            if (state.editLinkedIn.isNotBlank()) socialLinks["linkedin"] = state.editLinkedIn.trim()
+            if (state.editGitHub.isNotBlank()) socialLinks["github"] = state.editGitHub.trim()
+
             // Update profile
             val updatedUser = currentUser.copy(
                 displayName = state.editDisplayName.trim(),
@@ -157,7 +252,8 @@ class ProfileViewModel @Inject constructor(
                 gender = state.editGender,
                 department = state.editDepartment.trim(),
                 year = state.editYear.toIntOrNull(),
-                photoUrl = photoUrl
+                photoUrl = photoUrl,
+                socialLinks = socialLinks
             )
 
             when (val result = authRepository.updateProfile(updatedUser)) {

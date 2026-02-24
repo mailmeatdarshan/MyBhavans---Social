@@ -32,10 +32,10 @@ class SafeWalkRepositoryImpl @Inject constructor(
             return@callbackFlow
         }
         
+        // Load all pending requests, then filter client-side to exclude own user
+        // This avoids compound query + composite index requirement
         val listener = requestsCollection
             .whereEqualTo("status", WalkRequestStatus.PENDING.name)
-            .whereNotEqualTo("requesterId", currentUser.uid)
-            .orderBy("requesterId")
             .orderBy("scheduledTime", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -45,7 +45,7 @@ class SafeWalkRepositoryImpl @Inject constructor(
                 
                 val requests = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(WalkRequestDto::class.java)?.toDomain(doc.id)
-                } ?: emptyList()
+                }?.filter { it.requesterId != currentUser.uid } ?: emptyList()
                 
                 trySend(Resource.Success(requests))
             }

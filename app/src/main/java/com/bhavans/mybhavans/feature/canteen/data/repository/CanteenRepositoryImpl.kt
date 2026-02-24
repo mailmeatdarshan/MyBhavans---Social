@@ -4,6 +4,7 @@ import com.bhavans.mybhavans.core.util.Resource
 import com.bhavans.mybhavans.feature.canteen.domain.model.Canteen
 import com.bhavans.mybhavans.feature.canteen.domain.model.CheckIn
 import com.bhavans.mybhavans.feature.canteen.domain.model.CrowdLevel
+import com.bhavans.mybhavans.feature.canteen.domain.model.MenuItem
 import com.bhavans.mybhavans.feature.canteen.domain.repository.CanteenRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -39,10 +40,55 @@ class CanteenRepositoryImpl @Inject constructor(
                     doc.toObject(CanteenDto::class.java)?.toDomain(doc.id)
                 } ?: emptyList()
                 
+                if (canteens.isEmpty()) {
+                    // Seed default canteen if none exist
+                    seedDefaultCanteen()
+                }
+                
                 trySend(Resource.Success(canteens))
             }
         
         awaitClose { listener.remove() }
+    }
+
+    private fun seedDefaultCanteen() {
+        val defaultMenuItems = listOf(
+            mapOf("name" to "Vada Pav", "price" to 20.0, "category" to "Snacks", "isAvailable" to true),
+            mapOf("name" to "Samosa", "price" to 15.0, "category" to "Snacks", "isAvailable" to true),
+            mapOf("name" to "Tea (Chai)", "price" to 10.0, "category" to "Beverages", "isAvailable" to true),
+            mapOf("name" to "Coffee", "price" to 15.0, "category" to "Beverages", "isAvailable" to true),
+            mapOf("name" to "Cold Coffee", "price" to 30.0, "category" to "Beverages", "isAvailable" to true),
+            mapOf("name" to "Thali (Veg)", "price" to 70.0, "category" to "Meals", "isAvailable" to true),
+            mapOf("name" to "Pav Bhaji", "price" to 50.0, "category" to "Meals", "isAvailable" to true),
+            mapOf("name" to "Misal Pav", "price" to 45.0, "category" to "Meals", "isAvailable" to true),
+            mapOf("name" to "Sandwich", "price" to 35.0, "category" to "Snacks", "isAvailable" to true),
+            mapOf("name" to "Maggi", "price" to 25.0, "category" to "Snacks", "isAvailable" to true),
+            mapOf("name" to "Biryani", "price" to 80.0, "category" to "Meals", "isAvailable" to true),
+            mapOf("name" to "Frankie", "price" to 40.0, "category" to "Snacks", "isAvailable" to true),
+            mapOf("name" to "Manchurian", "price" to 50.0, "category" to "Chinese", "isAvailable" to true),
+            mapOf("name" to "Fried Rice", "price" to 55.0, "category" to "Chinese", "isAvailable" to true),
+            mapOf("name" to "Juice (Fresh)", "price" to 25.0, "category" to "Beverages", "isAvailable" to true),
+            mapOf("name" to "Buttermilk", "price" to 10.0, "category" to "Beverages", "isAvailable" to true)
+        )
+
+        val canteenData = hashMapOf(
+            "name" to "Bhavans Canteen",
+            "location" to "Ground Floor, Main Building",
+            "currentCrowdLevel" to "MODERATE",
+            "crowdPercentage" to 50,
+            "checkInsLast30Min" to 0,
+            "isOpen" to true,
+            "openTime" to "08:00",
+            "closeTime" to "17:00",
+            "specialItems" to listOf("Pav Bhaji", "Cold Coffee", "Biryani"),
+            "avgWaitTime" to 10,
+            "menuItems" to defaultMenuItems,
+            "totalSeats" to 120,
+            "occupiedSeats" to 0,
+            "lastUpdated" to System.currentTimeMillis()
+        )
+
+        canteensCollection.document("bhavans_main").set(canteenData)
     }
 
     override suspend fun getCanteen(canteenId: String): Resource<Canteen> {
@@ -195,7 +241,10 @@ data class CanteenDto(
     val closeTime: String = "18:00",
     val specialItems: List<String> = emptyList(),
     val avgWaitTime: Int = 10,
-    val lastUpdated: Long = 0
+    val lastUpdated: Long = 0,
+    val menuItems: List<Map<String, Any>> = emptyList(),
+    val totalSeats: Int = 100,
+    val occupiedSeats: Int = 0
 ) {
     fun toDomain(id: String): Canteen {
         return Canteen(
@@ -211,7 +260,17 @@ data class CanteenDto(
             closeTime = closeTime,
             specialItems = specialItems,
             avgWaitTime = avgWaitTime,
-            lastUpdated = lastUpdated
+            lastUpdated = lastUpdated,
+            menuItems = menuItems.map { m ->
+                MenuItem(
+                    name = m["name"] as? String ?: "",
+                    price = (m["price"] as? Number)?.toDouble() ?: 0.0,
+                    category = m["category"] as? String ?: "General",
+                    isAvailable = m["isAvailable"] as? Boolean ?: true
+                )
+            },
+            totalSeats = totalSeats,
+            occupiedSeats = occupiedSeats
         )
     }
 }
