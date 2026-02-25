@@ -30,26 +30,32 @@ class FeedRepositoryImpl @Inject constructor(
 
     override fun getFeed(category: PostCategory?): Flow<Resource<List<Post>>> = callbackFlow {
         trySend(Resource.Loading())
-        
-        var query: Query = postsCollection.orderBy("createdAt", Query.Direction.DESCENDING)
-        
-        if (category != null) {
-            query = query.whereEqualTo("category", category.name)
-        }
-        
+
+        // NOTE: Combining orderBy("createdAt") with whereEqualTo("category") is a compound
+        // Firestore query that requires a composite index. To avoid needing that index, we
+        // fetch ALL posts ordered by createdAt and filter client-side by category.
+        val query: Query = postsCollection.orderBy("createdAt", Query.Direction.DESCENDING)
+
         val listener = query.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 trySend(Resource.Error(error.message ?: "Failed to load feed"))
                 return@addSnapshotListener
             }
-            
-            val posts = snapshot?.documents?.mapNotNull { doc ->
+
+            val allPosts = snapshot?.documents?.mapNotNull { doc ->
                 doc.toObject(PostDto::class.java)?.toDomain(doc.id)
             } ?: emptyList()
-            
+
+            // Filter by category client-side — no index required
+            val posts = if (category != null) {
+                allPosts.filter { it.category == category }
+            } else {
+                allPosts
+            }
+
             trySend(Resource.Success(posts))
         }
-        
+
         awaitClose { listener.remove() }
     }
 
@@ -105,6 +111,12 @@ class FeedRepositoryImpl @Inject constructor(
             )
             
             val docRef = postsCollection.add(postDto).await()
+
+            // Keep user's postsCount in sync
+            usersCollection.document(currentUser.uid)
+                .update("postsCount", com.google.firebase.firestore.FieldValue.increment(1))
+                .await()
+
             Resource.Success(postDto.toDomain(docRef.id))
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to create post")
@@ -159,6 +171,12 @@ class FeedRepositoryImpl @Inject constructor(
             
             // Delete the post
             postsCollection.document(postId).delete().await()
+
+            // Keep user's postsCount in sync
+            usersCollection.document(currentUser.uid)
+                .update("postsCount", com.google.firebase.firestore.FieldValue.increment(-1))
+                .await()
+
             Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to delete post")

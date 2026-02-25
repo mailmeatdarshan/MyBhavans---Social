@@ -10,6 +10,8 @@ import com.bhavans.mybhavans.feature.feed.data.repository.FeedRepositoryImpl
 import com.bhavans.mybhavans.feature.feed.domain.repository.FeedRepository
 import com.bhavans.mybhavans.feature.lostfound.data.repository.LostFoundRepositoryImpl
 import com.bhavans.mybhavans.feature.lostfound.domain.repository.LostFoundRepository
+import com.bhavans.mybhavans.feature.library.data.repository.LibraryRepositoryImpl
+import com.bhavans.mybhavans.feature.library.domain.repository.LibraryRepository
 import com.bhavans.mybhavans.feature.safewalk.data.repository.SafeWalkRepositoryImpl
 import com.bhavans.mybhavans.feature.safewalk.domain.repository.SafeWalkRepository
 import com.bhavans.mybhavans.feature.skillswap.data.repository.SkillSwapRepositoryImpl
@@ -59,6 +61,12 @@ abstract class RepositoryModule {
     abstract fun bindSafeWalkRepository(
         safeWalkRepositoryImpl: SafeWalkRepositoryImpl
     ): SafeWalkRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindLibraryRepository(
+        libraryRepositoryImpl: LibraryRepositoryImpl
+    ): LibraryRepository
 
     @Binds
     @Singleton

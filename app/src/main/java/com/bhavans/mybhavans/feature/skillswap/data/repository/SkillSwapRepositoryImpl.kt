@@ -31,32 +31,28 @@ class SkillSwapRepositoryImpl @Inject constructor(
         isTeaching: Boolean?
     ): Flow<Resource<List<Skill>>> = callbackFlow {
         trySend(Resource.Loading())
-        
-        var query: Query = skillsCollection
-            .whereEqualTo("isActive", true)
+
+        // Fetch all skills ordered by createdAt; filter client-side to avoid composite index
+        val listener = skillsCollection
             .orderBy("createdAt", Query.Direction.DESCENDING)
-        
-        if (category != null) {
-            query = query.whereEqualTo("category", category.name)
-        }
-        
-        if (isTeaching != null) {
-            query = query.whereEqualTo("isTeaching", isTeaching)
-        }
-        
-        val listener = query.addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                trySend(Resource.Error(error.message ?: "Failed to load skills"))
-                return@addSnapshotListener
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(Resource.Error(error.message ?: "Failed to load skills"))
+                    return@addSnapshotListener
+                }
+
+                var skills = snapshot?.documents?.mapNotNull { doc ->
+                    doc.toObject(SkillDto::class.java)?.toDomain(doc.id)
+                } ?: emptyList()
+
+                // Client-side filters (avoids needing Firestore composite indexes)
+                skills = skills.filter { it.isActive }
+                if (category != null) skills = skills.filter { it.category == category }
+                if (isTeaching != null) skills = skills.filter { it.isTeaching == isTeaching }
+
+                trySend(Resource.Success(skills))
             }
-            
-            val skills = snapshot?.documents?.mapNotNull { doc ->
-                doc.toObject(SkillDto::class.java)?.toDomain(doc.id)
-            } ?: emptyList()
-            
-            trySend(Resource.Success(skills))
-        }
-        
+
         awaitClose { listener.remove() }
     }
 
@@ -76,7 +72,7 @@ class SkillSwapRepositoryImpl @Inject constructor(
 
     override fun getUserSkills(userId: String): Flow<Resource<List<Skill>>> = callbackFlow {
         trySend(Resource.Loading())
-        
+
         val listener = skillsCollection
             .whereEqualTo("userId", userId)
             .orderBy("createdAt", Query.Direction.DESCENDING)
@@ -85,14 +81,14 @@ class SkillSwapRepositoryImpl @Inject constructor(
                     trySend(Resource.Error(error.message ?: "Failed to load skills"))
                     return@addSnapshotListener
                 }
-                
+
                 val skills = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(SkillDto::class.java)?.toDomain(doc.id)
                 } ?: emptyList()
-                
+
                 trySend(Resource.Success(skills))
             }
-        
+
         awaitClose { listener.remove() }
     }
 
@@ -251,25 +247,25 @@ class SkillSwapRepositoryImpl @Inject constructor(
             close()
             return@callbackFlow
         }
-        
+
         trySend(Resource.Loading())
-        
+
+        // Single field query — no composite index needed
         val listener = matchesCollection
             .whereEqualTo("requesterId", currentUser.uid)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     trySend(Resource.Error(error.message ?: "Failed to load requests"))
                     return@addSnapshotListener
                 }
-                
+
                 val matches = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(SkillMatchDto::class.java)?.toDomain(doc.id)
-                } ?: emptyList()
-                
+                }?.sortedByDescending { it.createdAt } ?: emptyList()
+
                 trySend(Resource.Success(matches))
             }
-        
+
         awaitClose { listener.remove() }
     }
 
@@ -280,25 +276,25 @@ class SkillSwapRepositoryImpl @Inject constructor(
             close()
             return@callbackFlow
         }
-        
+
         trySend(Resource.Loading())
-        
+
+        // Single field query — no composite index needed
         val listener = matchesCollection
             .whereEqualTo("providerId", currentUser.uid)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     trySend(Resource.Error(error.message ?: "Failed to load requests"))
                     return@addSnapshotListener
                 }
-                
+
                 val matches = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(SkillMatchDto::class.java)?.toDomain(doc.id)
-                } ?: emptyList()
-                
+                }?.sortedByDescending { it.createdAt } ?: emptyList()
+
                 trySend(Resource.Success(matches))
             }
-        
+
         awaitClose { listener.remove() }
     }
 

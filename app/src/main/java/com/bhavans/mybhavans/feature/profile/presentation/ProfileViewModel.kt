@@ -4,8 +4,10 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bhavans.mybhavans.core.util.Resource
+import com.bhavans.mybhavans.feature.activity.domain.repository.ActivityRepository
 import com.bhavans.mybhavans.feature.auth.domain.model.User
 import com.bhavans.mybhavans.feature.auth.domain.repository.AuthRepository
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -51,7 +53,8 @@ sealed class ProfileEvent {
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val activityRepository: ActivityRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProfileState())
@@ -173,11 +176,21 @@ class ProfileViewModel @Inject constructor(
     fun followUser(userId: String) {
         viewModelScope.launch {
             _userProfileState.update { it.copy(isFollowLoading = true) }
-            when (authRepository.followUser(userId)) {
+            when (val result = authRepository.followUser(userId)) {
                 is Resource.Success -> {
                     // Refresh profile to get updated counts
                     loadUserProfile(userId)
                     _userProfileState.update { it.copy(isFollowLoading = false, isFollowing = true) }
+                    // Send FOLLOW notification to the user being followed
+                    val currentUser = FirebaseAuth.getInstance().currentUser
+                    activityRepository.createNotification(
+                        targetUserId = userId,
+                        type = "FOLLOW",
+                        actorName = currentUser?.displayName ?: "Someone",
+                        actorPhotoUrl = currentUser?.photoUrl?.toString() ?: "",
+                        postId = null,
+                        message = "started following you"
+                    )
                 }
                 is Resource.Error -> {
                     _userProfileState.update { it.copy(isFollowLoading = false) }

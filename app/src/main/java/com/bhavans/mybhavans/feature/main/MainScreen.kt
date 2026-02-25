@@ -58,8 +58,10 @@ fun MainScreen(
     onNavigateToCanteen: () -> Unit,
     onNavigateToSkillSwap: () -> Unit,
     onNavigateToSafeWalk: () -> Unit,
+    onNavigateToLibrary: () -> Unit,
     onNavigateToEditProfile: () -> Unit,
     onNavigateToAdmin: () -> Unit,
+    onNavigateToSettings: () -> Unit,
     onNavigateToUserProfile: (String) -> Unit,
     onLogout: () -> Unit
 ) {
@@ -162,7 +164,9 @@ fun MainScreen(
                     onNavigateToLostFound = onNavigateToLostFound,
                     onNavigateToCanteen = onNavigateToCanteen,
                     onNavigateToSkillSwap = onNavigateToSkillSwap,
-                    onNavigateToSafeWalk = onNavigateToSafeWalk
+                    onNavigateToSafeWalk = onNavigateToSafeWalk,
+                    onNavigateToLibrary = onNavigateToLibrary,
+                    onNavigateToUserProfile = onNavigateToUserProfile
                 )
             }
             // Index 2 = Create (navigates directly, no screen shown here)
@@ -181,7 +185,8 @@ fun MainScreen(
                 ProfileScreen(
                     onLogout = onLogout,
                     onNavigateToEditProfile = onNavigateToEditProfile,
-                    onNavigateToAdmin = onNavigateToAdmin
+                    onNavigateToAdmin = onNavigateToAdmin,
+                    onNavigateToSettings = onNavigateToSettings
                 )
             }
         }

@@ -24,32 +24,33 @@ class SafeWalkRepositoryImpl @Inject constructor(
 
     override fun getPendingRequests(): Flow<Resource<List<WalkRequest>>> = callbackFlow {
         trySend(Resource.Loading())
-        
+
         val currentUser = auth.currentUser
         if (currentUser == null) {
             trySend(Resource.Error("User not authenticated"))
             close()
             return@callbackFlow
         }
-        
-        // Load all pending requests, then filter client-side to exclude own user
-        // This avoids compound query + composite index requirement
+
+        // Single-field query only — no composite index needed. Sort + filter client-side.
         val listener = requestsCollection
             .whereEqualTo("status", WalkRequestStatus.PENDING.name)
-            .orderBy("scheduledTime", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     trySend(Resource.Error(error.message ?: "Failed to load requests"))
                     return@addSnapshotListener
                 }
-                
+
                 val requests = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(WalkRequestDto::class.java)?.toDomain(doc.id)
-                }?.filter { it.requesterId != currentUser.uid } ?: emptyList()
-                
+                }
+                    ?.filter { it.requesterId != currentUser.uid } // exclude own requests
+                    ?.sortedBy { it.scheduledTime } // earliest walk first
+                    ?: emptyList()
+
                 trySend(Resource.Success(requests))
             }
-        
+
         awaitClose { listener.remove() }
     }
 
@@ -60,25 +61,25 @@ class SafeWalkRepositoryImpl @Inject constructor(
             close()
             return@callbackFlow
         }
-        
+
         trySend(Resource.Loading())
-        
+
+        // Single-field query — sort client-side to avoid composite index
         val listener = requestsCollection
             .whereEqualTo("requesterId", currentUser.uid)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     trySend(Resource.Error(error.message ?: "Failed to load requests"))
                     return@addSnapshotListener
                 }
-                
+
                 val requests = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(WalkRequestDto::class.java)?.toDomain(doc.id)
-                } ?: emptyList()
-                
+                }?.sortedByDescending { it.createdAt } ?: emptyList()
+
                 trySend(Resource.Success(requests))
             }
-        
+
         awaitClose { listener.remove() }
     }
 
@@ -89,25 +90,25 @@ class SafeWalkRepositoryImpl @Inject constructor(
             close()
             return@callbackFlow
         }
-        
+
         trySend(Resource.Loading())
-        
+
+        // Single-field query — sort client-side to avoid composite index
         val listener = requestsCollection
             .whereEqualTo("buddyId", currentUser.uid)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     trySend(Resource.Error(error.message ?: "Failed to load requests"))
                     return@addSnapshotListener
                 }
-                
+
                 val requests = snapshot?.documents?.mapNotNull { doc ->
                     doc.toObject(WalkRequestDto::class.java)?.toDomain(doc.id)
-                } ?: emptyList()
-                
+                }?.sortedByDescending { it.createdAt } ?: emptyList()
+
                 trySend(Resource.Success(requests))
             }
-        
+
         awaitClose { listener.remove() }
     }
 

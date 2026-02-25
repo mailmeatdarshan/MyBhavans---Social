@@ -82,12 +82,12 @@ fun PostCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
     ) {
-        // Header — Author row
+        // Header — Author row (clicking header navigates to post detail)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .clickable(onClick = onClick)
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -176,24 +176,39 @@ fun PostCard(
                                 )
                             }
                         )
+                    } else {
+                        DropdownMenuItem(
+                            text = { Text("Report Post") },
+                            onClick = {
+                                showMenu = false
+                                // TODO: hook up report action
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.MoreVert,
+                                    contentDescription = null
+                                )
+                            }
+                        )
                     }
                 }
             }
         }
 
-        // Image (if available)
+        // Image (if available) — clicking the image also opens post detail
         if (post.imageUrl.isNotEmpty()) {
             AsyncImage(
                 model = post.imageUrl,
                 contentDescription = "Post image",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1f),
+                    .aspectRatio(4f / 3f)
+                    .clickable(onClick = onClick),
                 contentScale = ContentScale.Crop
             )
         }
 
-        // Action bar
+        // Action bar — clicking the actions row also opens post detail (on non-button tap areas)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -250,7 +265,7 @@ fun PostCard(
             )
         }
 
-        // Content with author name
+        // Content with author name — tap to expand
         if (post.content.isNotEmpty()) {
             Text(
                 text = buildAnnotatedString {
@@ -261,7 +276,9 @@ fun PostCard(
                     append(post.content)
                 },
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 2.dp),
+                modifier = Modifier
+                    .padding(horizontal = 14.dp, vertical = 2.dp)
+                    .clickable(onClick = onClick),
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
             )

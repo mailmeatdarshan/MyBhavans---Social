@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Allows FileProvider to share files from the app's external cache dir (camera photos) -->
+    <external-cache-path name="camera_photos" path="." />
+    <cache-path name="camera_photos_internal" path="." />
+</paths>

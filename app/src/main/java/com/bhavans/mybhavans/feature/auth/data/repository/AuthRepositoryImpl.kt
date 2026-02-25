@@ -46,7 +46,14 @@ class AuthRepositoryImpl @Inject constructor(
                                 postsCount = snapshot.getLong("postsCount")?.toInt() ?: 0,
                                 followersCount = snapshot.getLong("followersCount")?.toInt() ?: 0,
                                 followingCount = snapshot.getLong("followingCount")?.toInt() ?: 0,
-                                socialLinks = @Suppress("UNCHECKED_CAST") ((snapshot.get("socialLinks") as? Map<String, String>) ?: emptyMap()),
+                                socialLinks = (snapshot.get("socialLinks") as? Map<*, *>)
+                                    ?.entries
+                                    ?.mapNotNull { (k, v) ->
+                                        val key = k?.toString() ?: return@mapNotNull null
+                                        val value = v?.toString() ?: return@mapNotNull null
+                                        key to value
+                                    }
+                                    ?.toMap() ?: emptyMap(),
                                 followers = (snapshot.get("followers") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
                                 following = (snapshot.get("following") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
                             )
@@ -223,6 +230,23 @@ class AuthRepositoryImpl @Inject constructor(
                 .await()
 
             if (snapshot.exists()) {
+                // Count actual posts from the posts collection for accuracy
+                val postsSnapshot = firestore.collection("posts")
+                    .whereEqualTo("authorId", uid)
+                    .get()
+                    .await()
+                val actualPostsCount = postsSnapshot.size()
+
+                // Safely convert socialLinks from Map<String,Any> to Map<String,String>
+                val socialLinks = (snapshot.get("socialLinks") as? Map<*, *>)
+                    ?.entries
+                    ?.mapNotNull { (k, v) ->
+                        val key = k?.toString() ?: return@mapNotNull null
+                        val value = v?.toString()?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                        key to value
+                    }
+                    ?.toMap() ?: emptyMap()
+
                 val user = User(
                     uid = uid,
                     email = snapshot.getString("email") ?: "",
@@ -235,10 +259,10 @@ class AuthRepositoryImpl @Inject constructor(
                     gender = snapshot.getString("gender") ?: "",
                     skills = (snapshot.get("skills") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
                     isVerified = snapshot.getBoolean("isVerified") ?: false,
-                    postsCount = snapshot.getLong("postsCount")?.toInt() ?: 0,
+                    postsCount = actualPostsCount,
                     followersCount = snapshot.getLong("followersCount")?.toInt() ?: 0,
                     followingCount = snapshot.getLong("followingCount")?.toInt() ?: 0,
-                    socialLinks = @Suppress("UNCHECKED_CAST") ((snapshot.get("socialLinks") as? Map<String, String>) ?: emptyMap()),
+                    socialLinks = socialLinks,
                     followers = (snapshot.get("followers") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
                     following = (snapshot.get("following") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
                 )
@@ -310,6 +334,64 @@ class AuthRepositoryImpl @Inject constructor(
             following.contains(targetUserId)
         } catch (e: Exception) {
             false
+        }
+    }
+
+    override suspend fun searchUsers(query: String): Resource<List<User>> {
+        return try {
+            if (query.isBlank()) return Resource.Success(emptyList())
+
+            val lowerQuery = query.lowercase().trim()
+            val snapshot = firestore.collection(Constants.USERS_COLLECTION)
+                .get()
+                .await()
+
+            val currentUid = auth.currentUser?.uid ?: ""
+
+            val users = snapshot.documents.mapNotNull { doc ->
+                val uid = doc.id
+                if (uid == currentUid) return@mapNotNull null // skip self
+
+                val displayName = doc.getString("displayName") ?: return@mapNotNull null
+                val department = doc.getString("department") ?: ""
+                val bio = doc.getString("bio") ?: ""
+
+                val matches = displayName.lowercase().contains(lowerQuery) ||
+                        department.lowercase().contains(lowerQuery) ||
+                        bio.lowercase().contains(lowerQuery)
+
+                if (!matches) return@mapNotNull null
+
+                val socialLinks = (doc.get("socialLinks") as? Map<*, *>)
+                    ?.entries
+                    ?.mapNotNull { (k, v) ->
+                        val key = k?.toString() ?: return@mapNotNull null
+                        val value = v?.toString() ?: return@mapNotNull null
+                        key to value
+                    }
+                    ?.toMap() ?: emptyMap()
+
+                User(
+                    uid = uid,
+                    email = doc.getString("email") ?: "",
+                    displayName = displayName,
+                    photoUrl = doc.getString("photoUrl") ?: "",
+                    department = department,
+                    year = doc.getLong("year")?.toInt(),
+                    role = doc.getString("role") ?: Constants.ROLE_STUDENT,
+                    bio = bio,
+                    gender = doc.getString("gender") ?: "",
+                    isVerified = doc.getBoolean("isVerified") ?: false,
+                    postsCount = doc.getLong("postsCount")?.toInt() ?: 0,
+                    followersCount = doc.getLong("followersCount")?.toInt() ?: 0,
+                    followingCount = doc.getLong("followingCount")?.toInt() ?: 0,
+                    socialLinks = socialLinks
+                )
+            }
+
+            Resource.Success(users)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Search failed")
         }
     }
 

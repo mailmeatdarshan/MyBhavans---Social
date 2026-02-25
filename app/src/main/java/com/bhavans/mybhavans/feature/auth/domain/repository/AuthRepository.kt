@@ -33,4 +33,6 @@ interface AuthRepository {
     suspend fun unfollowUser(targetUserId: String): Resource<Unit>
 
     suspend fun isFollowing(targetUserId: String): Boolean
+
+    suspend fun searchUsers(query: String): Resource<List<User>>
 }

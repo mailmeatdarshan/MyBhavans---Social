@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Email
@@ -72,6 +73,7 @@ fun ProfileScreen(
     onLogout: () -> Unit,
     onNavigateToEditProfile: () -> Unit,
     onNavigateToAdmin: () -> Unit,
+    onNavigateToSettings: () -> Unit,
     authViewModel: AuthViewModel = hiltViewModel(),
     themeViewModel: ThemeViewModel = hiltViewModel(),
     profileViewModel: ProfileViewModel = hiltViewModel()
@@ -100,7 +102,7 @@ fun ProfileScreen(
                         contentDescription = "Toggle theme"
                     )
                 }
-                IconButton(onClick = { /* TODO: Settings */ }) {
+                IconButton(onClick = onNavigateToSettings) {
                     Icon(
                         imageVector = Icons.Default.Settings,
                         contentDescription = "Settings"
@@ -284,6 +286,35 @@ fun ProfileScreen(
                 title = "Email",
                 value = user?.email ?: "Not set"
             )
+
+            // Social Links section (only show if any links are set)
+            val socialLinks = user?.socialLinks ?: emptyMap()
+            val socialEntries = listOf(
+                "instagram" to "Instagram",
+                "twitter"   to "Twitter / X",
+                "linkedin"  to "LinkedIn",
+                "github"    to "GitHub"
+            ).mapNotNull { (key, label) ->
+                val url = socialLinks[key]
+                if (!url.isNullOrBlank()) label to url else null
+            }
+
+            if (socialEntries.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Social Links",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                socialEntries.forEach { (label, url) ->
+                    ProfileInfoCard(
+                        icon = Icons.Default.Link,
+                        title = label,
+                        value = url
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(32.dp))

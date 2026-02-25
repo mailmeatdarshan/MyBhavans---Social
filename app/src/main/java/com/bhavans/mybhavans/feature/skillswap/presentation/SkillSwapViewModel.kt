@@ -33,13 +33,43 @@ class SkillSwapViewModel @Inject constructor(
     private val _matchState = MutableStateFlow(MatchRequestsState())
     val matchState = _matchState.asStateFlow()
 
+    // Raw full list from Firestore (always all active skills)
+    private val _allSkills = MutableStateFlow<List<com.bhavans.mybhavans.feature.skillswap.domain.model.Skill>>(emptyList())
+
     init {
-        loadSkills()
+        observeAllSkills()
+    }
+
+    /** Single persistent Firestore listener — no compound queries, no dangling flows */
+    private fun observeAllSkills() {
+        repository.getSkills(category = null, isTeaching = null).onEach { result ->
+            when (result) {
+                is Resource.Loading -> _state.update { it.copy(isLoading = true, error = null) }
+                is Resource.Success -> {
+                    _allSkills.value = result.data ?: emptyList()
+                    applyFilters()
+                    _state.update { it.copy(isLoading = false) }
+                }
+                is Resource.Error -> _state.update {
+                    it.copy(isLoading = false, error = result.message)
+                }
+            }
+        }.launchIn(viewModelScope)
+    }
+
+    /** Apply current selectedCategory + showTeaching filters onto the cached full list */
+    private fun applyFilters() {
+        val category = _state.value.selectedCategory
+        val isTeaching = _state.value.showTeaching
+        var filtered = _allSkills.value
+        if (category != null) filtered = filtered.filter { it.category == category }
+        if (isTeaching != null) filtered = filtered.filter { it.isTeaching == isTeaching }
+        _state.update { it.copy(skills = filtered) }
     }
 
     fun onEvent(event: SkillSwapEvent) {
         when (event) {
-            is SkillSwapEvent.LoadSkills -> loadSkills()
+            is SkillSwapEvent.LoadSkills -> observeAllSkills()
             is SkillSwapEvent.FilterByCategory -> filterByCategory(event.category)
             is SkillSwapEvent.FilterByType -> filterByType(event.isTeaching)
             is SkillSwapEvent.LoadSkillDetail -> loadSkillDetail(event.skillId)
@@ -62,31 +92,14 @@ class SkillSwapViewModel @Inject constructor(
         }
     }
 
-    private fun loadSkills() {
-        val category = _state.value.selectedCategory
-        val isTeaching = _state.value.showTeaching
-        
-        repository.getSkills(category, isTeaching).onEach { result ->
-            when (result) {
-                is Resource.Loading -> _state.update { it.copy(isLoading = true, error = null) }
-                is Resource.Success -> _state.update { 
-                    it.copy(isLoading = false, skills = result.data ?: emptyList())
-                }
-                is Resource.Error -> _state.update { 
-                    it.copy(isLoading = false, error = result.message)
-                }
-            }
-        }.launchIn(viewModelScope)
-    }
-
     private fun filterByCategory(category: SkillCategory?) {
         _state.update { it.copy(selectedCategory = category) }
-        loadSkills()
+        applyFilters()
     }
 
     private fun filterByType(isTeaching: Boolean?) {
         _state.update { it.copy(showTeaching = isTeaching) }
-        loadSkills()
+        applyFilters()
     }
 
     private fun loadSkillDetail(skillId: String) {

@@ -41,6 +41,9 @@ sealed class Routes(val route: String) {
         fun createRoute(listingId: String) = "skill_listing_detail/$listingId"
     }
     
+    // Library Routes
+    data object Library : Routes("library")
+
     // Safe Walk Routes
     data object SafeWalk : Routes("safe_walk")
     data object CreateSafeWalkRequest : Routes("create_safe_walk_request")
@@ -59,4 +62,7 @@ sealed class Routes(val route: String) {
     // Explore & Activity (tab content, used internally)
     data object Explore : Routes("explore")
     data object Activity : Routes("activity")
+
+    // Settings
+    data object Settings : Routes("settings")
 }

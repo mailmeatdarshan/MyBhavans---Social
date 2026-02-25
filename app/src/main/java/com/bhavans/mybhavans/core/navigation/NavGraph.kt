@@ -23,11 +23,13 @@ import com.bhavans.mybhavans.feature.feed.presentation.PostDetailScreen
 import com.bhavans.mybhavans.feature.lostfound.presentation.CreateLostFoundScreen
 import com.bhavans.mybhavans.feature.lostfound.presentation.LostFoundDetailScreen
 import com.bhavans.mybhavans.feature.lostfound.presentation.LostFoundScreen
+import com.bhavans.mybhavans.feature.library.presentation.LibraryScreen
 import com.bhavans.mybhavans.feature.main.MainScreen
 import com.bhavans.mybhavans.feature.profile.presentation.EditProfileScreen
 import com.bhavans.mybhavans.feature.profile.presentation.UserProfileScreen
 import com.bhavans.mybhavans.feature.safewalk.presentation.CreateWalkRequestScreen
 import com.bhavans.mybhavans.feature.safewalk.presentation.SafeWalkScreen
+import com.bhavans.mybhavans.feature.settings.presentation.SettingsScreen
 import com.bhavans.mybhavans.feature.skillswap.presentation.CreateSkillScreen
 import com.bhavans.mybhavans.feature.skillswap.presentation.SkillDetailScreen
 import com.bhavans.mybhavans.feature.skillswap.presentation.SkillSwapScreen
@@ -108,11 +110,17 @@ fun NavGraph(
                 onNavigateToSafeWalk = {
                     navController.navigate(Routes.SafeWalk.route)
                 },
+                onNavigateToLibrary = {
+                    navController.navigate(Routes.Library.route)
+                },
                 onNavigateToEditProfile = {
                     navController.navigate(Routes.EditProfile.route)
                 },
                 onNavigateToAdmin = {
                     navController.navigate(Routes.AdminDashboard.route)
+                },
+                onNavigateToSettings = {
+                    navController.navigate(Routes.Settings.route)
                 },
                 onNavigateToUserProfile = { userId ->
                     navController.navigate(Routes.UserProfile.createRoute(userId))
@@ -148,6 +156,13 @@ fun NavGraph(
                 onNavigateBack = {
                     navController.popBackStack()
                 }
+            )
+        }
+
+        // Settings
+        composable(Routes.Settings.route) {
+            SettingsScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
@@ -315,6 +330,15 @@ fun NavGraph(
             )
         }
         
+        // Library
+        composable(Routes.Library.route) {
+            LibraryScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
         // Safe Walk
         composable(Routes.SafeWalk.route) {
             SafeWalkScreen(
