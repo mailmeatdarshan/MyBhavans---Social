@@ -1,6 +1,7 @@
 package com.bhavans.mybhavans.feature.safewalk.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,8 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -195,7 +198,10 @@ fun SafeWalkScreen(
                         items(requests) { request ->
                             WalkRequestCard(
                                 request = request,
-                                onClick = { onNavigateToDetail(request.id) }
+                                onClick = { onNavigateToDetail(request.id) },
+                                onAccept = { viewModel.onEvent(SafeWalkEvent.AcceptRequest(request.id)) },
+                                onCancel = { viewModel.onEvent(SafeWalkEvent.CancelRequest(request.id)) },
+                                onComplete = { viewModel.onEvent(SafeWalkEvent.CompleteWalk(request.id)) }
                             )
                         }
                     }
@@ -208,7 +214,10 @@ fun SafeWalkScreen(
 @Composable
 fun WalkRequestCard(
     request: WalkRequest,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onAccept: () -> Unit,
+    onCancel: () -> Unit,
+    onComplete: () -> Unit
 ) {
     val statusColor = when (request.status) {
         WalkRequestStatus.PENDING -> WarningColor
@@ -221,8 +230,9 @@ fun WalkRequestCard(
     val dateFormat = SimpleDateFormat("MMM d, h:mm a", Locale.getDefault())
 
     Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -340,6 +350,40 @@ fun WalkRequestCard(
                         fontWeight = FontWeight.SemiBold,
                         color = SuccessColor
                     )
+                }
+            }
+            // Action Buttons
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                if (request.status == WalkRequestStatus.PENDING && request.buddyId == null) {
+                    Button(
+                        onClick = onAccept,
+                        colors = ButtonDefaults.buttonColors(containerColor = SuccessColor),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Accept")
+                    }
+                } else if (request.status == WalkRequestStatus.PENDING || request.status == WalkRequestStatus.ACCEPTED) {
+                    Button(
+                        onClick = onCancel,
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Cancel")
+                    }
+                    if (request.status == WalkRequestStatus.ACCEPTED || request.status == WalkRequestStatus.IN_PROGRESS) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = onComplete,
+                            colors = ButtonDefaults.buttonColors(containerColor = SuccessColor),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Complete")
+                        }
+                    }
                 }
             }
         }
