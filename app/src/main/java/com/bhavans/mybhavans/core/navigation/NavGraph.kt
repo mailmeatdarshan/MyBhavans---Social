@@ -1,5 +1,8 @@
 package com.bhavans.mybhavans.core.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -47,7 +50,10 @@ fun NavGraph(
         startDestination = Routes.Splash.route
     ) {
         // Splash Screen
-        composable(Routes.Splash.route) {
+        composable(
+            route = Routes.Splash.route,
+            exitTransition = { fadeOut(animationSpec = tween(300)) }
+        ) {
             SplashScreen(
                 onSplashComplete = {
                     val destination = if (authState.isLoggedIn) {
@@ -63,7 +69,10 @@ fun NavGraph(
         }
 
         // Auth Flow
-        composable(Routes.Login.route) {
+        composable(
+            route = Routes.Login.route,
+            enterTransition = { fadeIn(animationSpec = tween(300)) }
+        ) {
             LoginScreen(
                 onNavigateToSignUp = {
                     navController.navigate(Routes.SignUp.route)

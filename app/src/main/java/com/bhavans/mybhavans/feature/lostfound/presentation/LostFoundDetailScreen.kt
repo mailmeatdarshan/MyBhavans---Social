@@ -75,14 +75,22 @@ fun LostFoundDetailScreen(
 ) {
     val state by viewModel.detailState.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var hasLoaded by remember { mutableStateOf(false) }
 
     LaunchedEffect(itemId) {
         viewModel.onEvent(LostFoundEvent.LoadItemDetail(itemId))
     }
 
+    // Track when data has been loaded at least once
+    LaunchedEffect(state.item, state.isLoading, state.error) {
+        if (!state.isLoading && (state.item != null || state.error != null)) {
+            hasLoaded = true
+        }
+    }
+
+    // Only navigate back if item was deleted AFTER a successful load
     LaunchedEffect(state.item) {
-        if (state.item == null && !state.isLoading && state.error == null) {
-            // Item was deleted
+        if (hasLoaded && state.item == null && !state.isLoading && state.error == null) {
             onNavigateBack()
         }
     }

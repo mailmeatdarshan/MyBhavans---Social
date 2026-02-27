@@ -90,23 +90,7 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Logo/Title Section
-            Surface(
-                modifier = Modifier.size(100.dp),
-                shape = RoundedCornerShape(24.dp),
-                color = BhavansPrimary
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    androidx.compose.foundation.Image(
-                        painter = androidx.compose.ui.res.painterResource(id = com.bhavans.mybhavans.R.drawable.mybhavans_logo),
-                        contentDescription = "App Logo",
-                        modifier = Modifier.size(64.dp),
-                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(MaterialTheme.colorScheme.onPrimary)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Text(
                 text = "MyBhavans",
