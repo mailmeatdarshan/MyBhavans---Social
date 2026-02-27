@@ -104,6 +104,27 @@ fun CreatePostScreen(
         }
     }
 
+    // Permission launcher for Camera
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            val photoFile = File(
+                context.externalCacheDir ?: context.cacheDir,
+                "camera_photo_${System.currentTimeMillis()}.jpg"
+            )
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                photoFile
+            )
+            cameraImageUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            // Handle permission denied if needed
+        }
+    }
+
     LaunchedEffect(state.createPostError) {
         state.createPostError?.let { error ->
             snackbarHostState.showSnackbar(error)
@@ -314,18 +335,7 @@ fun CreatePostScreen(
                                 shape = RoundedCornerShape(12.dp)
                             )
                             .clickable {
-                                // Create a temp file and get its FileProvider URI before launching camera
-                                val photoFile = File(
-                                    context.externalCacheDir ?: context.cacheDir,
-                                    "camera_photo_${System.currentTimeMillis()}.jpg"
-                                )
-                                val uri = FileProvider.getUriForFile(
-                                    context,
-                                    "${context.packageName}.fileprovider",
-                                    photoFile
-                                )
-                                cameraImageUri = uri
-                                cameraLauncher.launch(uri)
+                                permissionLauncher.launch(android.Manifest.permission.CAMERA)
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -424,17 +434,7 @@ fun CreatePostScreen(
                         .clickable {
                             scope.launch { sheetState.hide() }.invokeOnCompletion {
                                 showImageSourceSheet = false
-                                val photoFile = File(
-                                    context.externalCacheDir ?: context.cacheDir,
-                                    "camera_photo_${System.currentTimeMillis()}.jpg"
-                                )
-                                val uri = FileProvider.getUriForFile(
-                                    context,
-                                    "${context.packageName}.fileprovider",
-                                    photoFile
-                                )
-                                cameraImageUri = uri
-                                cameraLauncher.launch(uri)
+                                permissionLauncher.launch(android.Manifest.permission.CAMERA)
                             }
                         }
                         .padding(vertical = 14.dp),

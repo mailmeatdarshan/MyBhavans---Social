@@ -193,7 +193,7 @@ fun ExploreScreen(
             // ── SEARCH RESULTS MODE ──
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 16.dp, bottom = 16.dp),
+                contentPadding = PaddingValues(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 // User results section
@@ -278,7 +278,7 @@ fun ExploreScreen(
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                contentPadding = PaddingValues(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {

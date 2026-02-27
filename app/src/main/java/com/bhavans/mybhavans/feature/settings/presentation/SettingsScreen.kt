@@ -146,7 +146,12 @@ fun SettingsScreen(
                                 .background(MaterialTheme.colorScheme.surface),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("M", fontSize = 36.sp, fontWeight = FontWeight.Black, color = BhavansPrimary)
+                            androidx.compose.foundation.Image(
+                                painter = androidx.compose.ui.res.painterResource(id = com.bhavans.mybhavans.R.drawable.mybhavans_logo),
+                                contentDescription = "App Logo",
+                                modifier = Modifier.size(48.dp),
+                                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
+                            )
                         }
                     }
 

@@ -97,11 +97,11 @@ fun LoginScreen(
                 color = BhavansPrimary
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "MB",
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontWeight = FontWeight.Bold
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(id = com.bhavans.mybhavans.R.drawable.mybhavans_logo),
+                        contentDescription = "App Logo",
+                        modifier = Modifier.size(64.dp),
+                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(MaterialTheme.colorScheme.onPrimary)
                     )
                 }
             }
