@@ -15,6 +15,7 @@ interface AdminRepository {
     suspend fun getStats(): Resource<AdminStats>
     suspend fun getAllUsers(): Resource<List<User>>
     suspend fun updateUserRole(uid: String, role: String): Resource<Unit>
+    suspend fun updateUserVerification(uid: String, isVerified: Boolean): Resource<Unit>
     suspend fun deleteUser(uid: String): Resource<Unit>
     suspend fun deletePost(postId: String): Resource<Unit>
     suspend fun deleteLostFoundItem(itemId: String): Resource<Unit>

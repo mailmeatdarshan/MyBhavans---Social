@@ -21,6 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -49,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.bhavans.mybhavans.core.ui.components.VerifiedBadge
 import com.bhavans.mybhavans.core.ui.theme.AccentBlue
 import com.bhavans.mybhavans.core.ui.theme.AccentPink
 import com.bhavans.mybhavans.core.ui.theme.BhavansPrimary
@@ -115,7 +117,8 @@ fun UserManagementScreen(
                     UserCard(
                         user = user,
                         onRoleClick = { showRoleDialog = user },
-                        onDeleteClick = { showDeleteDialog = user }
+                        onDeleteClick = { showDeleteDialog = user },
+                        onVerifyClick = { viewModel.toggleUserVerification(user.uid, user.isVerified) }
                     )
                 }
             }
@@ -176,7 +179,8 @@ fun UserManagementScreen(
 private fun UserCard(
     user: User,
     onRoleClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onVerifyClick: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -230,6 +234,9 @@ private fun UserCard(
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold
                     )
+                    if (user.isVerified) {
+                        VerifiedBadge(size = 14.dp)
+                    }
                     // Role badge
                     Box(
                         modifier = Modifier
@@ -256,6 +263,14 @@ private fun UserCard(
             }
 
             // Actions
+            IconButton(onClick = onVerifyClick) {
+                Icon(
+                    imageVector = Icons.Default.Verified,
+                    contentDescription = if (user.isVerified) "Remove verification" else "Verify user",
+                    tint = if (user.isVerified) Color(0xFF1DA1F2) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
             IconButton(onClick = onRoleClick) {
                 Icon(
                     imageVector = Icons.Default.AdminPanelSettings,

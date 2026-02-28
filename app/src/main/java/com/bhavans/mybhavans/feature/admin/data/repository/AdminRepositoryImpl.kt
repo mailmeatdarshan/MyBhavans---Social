@@ -19,8 +19,8 @@ class AdminRepositoryImpl @Inject constructor(
         return try {
             val users = firestore.collection(Constants.USERS_COLLECTION).get().await()
             val posts = firestore.collection(Constants.POSTS_COLLECTION).get().await()
-            val lostFound = firestore.collection(Constants.LOST_FOUND_COLLECTION).get().await()
-            val skills = firestore.collection(Constants.SKILL_LISTINGS_COLLECTION).get().await()
+            val lostFound = firestore.collection("lostfound").get().await()
+            val skills = firestore.collection("skills").get().await()
             val safeWalk = firestore.collection(Constants.SAFE_WALK_COLLECTION).get().await()
 
             Resource.Success(
@@ -72,6 +72,18 @@ class AdminRepositoryImpl @Inject constructor(
             Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to update user role")
+        }
+    }
+
+    override suspend fun updateUserVerification(uid: String, isVerified: Boolean): Resource<Unit> {
+        return try {
+            firestore.collection(Constants.USERS_COLLECTION)
+                .document(uid)
+                .update("isVerified", isVerified)
+                .await()
+            Resource.Success(Unit)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to update verification status")
         }
     }
 

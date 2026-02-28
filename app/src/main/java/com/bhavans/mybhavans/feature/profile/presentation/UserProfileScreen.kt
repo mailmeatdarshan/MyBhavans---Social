@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.bhavans.mybhavans.R
+import com.bhavans.mybhavans.core.ui.components.VerifiedBadge
 import com.bhavans.mybhavans.core.ui.theme.BhavansPrimary
 import com.bhavans.mybhavans.core.ui.theme.BhavansSecondary
 import com.bhavans.mybhavans.core.ui.theme.StoryRingGradient
@@ -176,11 +177,37 @@ fun UserProfileScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Text(
-                        text = user.displayName,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = user.displayName,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (user.isVerified) {
+                            VerifiedBadge(size = 22.dp)
+                        }
+                    }
+
+                    // Admin role badge
+                    if (user.role == "admin") {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(BhavansPrimary.copy(alpha = 0.12f))
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = "Admin",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = BhavansPrimary
+                            )
+                        }
+                    }
 
                     if (user.department.isNotEmpty()) {
                         Text(

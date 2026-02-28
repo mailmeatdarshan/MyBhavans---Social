@@ -51,6 +51,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.bhavans.mybhavans.core.ui.theme.AccentPink
+import com.bhavans.mybhavans.core.ui.components.VerifiedBadge
 import com.bhavans.mybhavans.core.ui.theme.ErrorColor
 import com.bhavans.mybhavans.core.ui.theme.StoryRingGradient
 import com.bhavans.mybhavans.feature.feed.domain.model.Post
@@ -135,11 +136,19 @@ fun PostCard(
                         onProfileClick?.invoke(post.authorId)
                     }
             ) {
-                Text(
-                    text = post.authorName,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = post.authorName,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    if (post.isAuthorVerified) {
+                        VerifiedBadge(size = 14.dp)
+                    }
+                }
                 if (post.category.displayName.isNotEmpty()) {
                     Text(
                         text = post.category.displayName,

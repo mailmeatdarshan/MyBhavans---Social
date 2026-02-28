@@ -86,6 +86,7 @@ class FeedRepositoryImpl @Inject constructor(
             val userDoc = usersCollection.document(currentUser.uid).get().await()
             val userName = userDoc.getString("displayName") ?: "Unknown"
             val userPhoto = userDoc.getString("photoUrl") ?: ""
+            val userVerified = userDoc.getBoolean("isVerified") ?: false
             
             var imageUrl = ""
             if (imageUri != null) {
@@ -101,6 +102,7 @@ class FeedRepositoryImpl @Inject constructor(
                 authorId = currentUser.uid,
                 authorName = userName,
                 authorPhotoUrl = userPhoto,
+                isAuthorVerified = userVerified,
                 content = content,
                 imageUrl = imageUrl,
                 category = category.name,
@@ -332,6 +334,7 @@ private data class PostDto(
     val authorId: String = "",
     val authorName: String = "",
     val authorPhotoUrl: String = "",
+    val isAuthorVerified: Boolean = false,
     val content: String = "",
     val imageUrl: String = "",
     val category: String = "GENERAL",
@@ -345,6 +348,7 @@ private data class PostDto(
         authorId = authorId,
         authorName = authorName,
         authorPhotoUrl = authorPhotoUrl,
+        isAuthorVerified = isAuthorVerified,
         content = content,
         imageUrl = imageUrl,
         category = try { PostCategory.valueOf(category) } catch (e: Exception) { PostCategory.GENERAL },

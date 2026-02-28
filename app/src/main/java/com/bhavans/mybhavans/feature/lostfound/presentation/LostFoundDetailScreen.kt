@@ -1,5 +1,7 @@
 package com.bhavans.mybhavans.feature.lostfound.presentation
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,6 +55,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -62,6 +65,7 @@ import com.bhavans.mybhavans.core.ui.theme.BhavansPrimary
 import com.bhavans.mybhavans.core.ui.theme.ErrorColor
 import com.bhavans.mybhavans.core.ui.theme.SuccessColor
 import com.bhavans.mybhavans.feature.lostfound.domain.model.LostFoundType
+import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -76,6 +80,8 @@ fun LostFoundDetailScreen(
     val state by viewModel.detailState.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
     var hasLoaded by remember { mutableStateOf(false) }
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    val context = LocalContext.current
 
     LaunchedEffect(itemId) {
         viewModel.onEvent(LostFoundEvent.LoadItemDetail(itemId))
@@ -133,7 +139,8 @@ fun LostFoundDetailScreen(
                 },
                 actions = {
                     state.item?.let { item ->
-                        if (!item.isResolved) {
+                        val isAuthor = item.authorId == currentUserId
+                        if (isAuthor && !item.isResolved) {
                             IconButton(onClick = { showDeleteDialog = true }) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
@@ -355,28 +362,98 @@ fun LostFoundDetailScreen(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         // Action buttons
+                        val isAuthor = item.authorId == currentUserId
                         if (!item.isResolved) {
-                            Button(
-                                onClick = { viewModel.onEvent(LostFoundEvent.MarkAsResolved(itemId)) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = SuccessColor
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.CheckCircle,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Mark as Resolved",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                            if (isAuthor) {
+                                // Author can mark their own item as resolved
+                                Button(
+                                    onClick = { viewModel.onEvent(LostFoundEvent.MarkAsResolved(itemId)) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(56.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = SuccessColor
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Mark as Resolved",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            } else {
+                                // Other users see a claim button
+                                // LOST item → others see "I Found This!"
+                                // FOUND item → others see "I Lost This!"
+                                val claimText = if (item.type == LostFoundType.LOST) "I Found This!" else "I Lost This!"
+                                val claimColor = if (item.type == LostFoundType.LOST) SuccessColor else BhavansAccent
+
+                                Button(
+                                    onClick = {
+                                        // Open email to contact the reporter
+                                        val subject = "Regarding your ${item.type.name.lowercase()} item: ${item.title}"
+                                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                            data = Uri.parse("mailto:${item.authorEmail}")
+                                            putExtra(Intent.EXTRA_SUBJECT, subject)
+                                        }
+                                        context.startActivity(intent)
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(56.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = claimColor
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Email,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = claimText,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // Also a phone call button if contact number is available
+                                if (item.contactNumber.isNotBlank()) {
+                                    OutlinedButton(
+                                        onClick = {
+                                            val intent = Intent(Intent.ACTION_DIAL).apply {
+                                                data = Uri.parse("tel:${item.contactNumber}")
+                                            }
+                                            context.startActivity(intent)
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(48.dp),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Phone,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "Call Reporter",
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
+                                }
                             }
                         }
 

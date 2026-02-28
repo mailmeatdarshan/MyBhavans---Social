@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.bhavans.mybhavans.core.ui.components.VerifiedBadge
 import com.bhavans.mybhavans.core.ui.theme.BhavansPrimary
 import com.bhavans.mybhavans.core.ui.theme.ErrorColor
 import com.bhavans.mybhavans.core.ui.theme.StoryRingGradient
@@ -173,11 +174,19 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Name
-            Text(
-                text = user?.displayName ?: "Student",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = user?.displayName ?: "Student",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                if (user?.isVerified == true) {
+                    VerifiedBadge(size = 18.dp)
+                }
+            }
 
             // Bio
             if (!user?.bio.isNullOrEmpty()) {

@@ -58,6 +58,7 @@ import com.bhavans.mybhavans.core.ui.theme.SuccessColor
 import com.bhavans.mybhavans.core.ui.theme.WarningColor
 import com.bhavans.mybhavans.feature.safewalk.domain.model.WalkRequest
 import com.bhavans.mybhavans.feature.safewalk.domain.model.WalkRequestStatus
+import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -72,6 +73,7 @@ fun SafeWalkScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val tabTitles = listOf("Available", "My Requests", "As Buddy")
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
     Scaffold(
         topBar = {
@@ -198,6 +200,7 @@ fun SafeWalkScreen(
                         items(requests) { request ->
                             WalkRequestCard(
                                 request = request,
+                                currentUserId = currentUserId,
                                 onClick = { onNavigateToDetail(request.id) },
                                 onAccept = { viewModel.onEvent(SafeWalkEvent.AcceptRequest(request.id)) },
                                 onCancel = { viewModel.onEvent(SafeWalkEvent.CancelRequest(request.id)) },
@@ -214,11 +217,15 @@ fun SafeWalkScreen(
 @Composable
 fun WalkRequestCard(
     request: WalkRequest,
+    currentUserId: String,
     onClick: () -> Unit,
     onAccept: () -> Unit,
     onCancel: () -> Unit,
     onComplete: () -> Unit
 ) {
+    val isRequester = request.requesterId == currentUserId
+    val isBuddy = request.buddyId == currentUserId
+
     val statusColor = when (request.status) {
         WalkRequestStatus.PENDING -> WarningColor
         WalkRequestStatus.ACCEPTED -> BhavansSecondary
@@ -352,36 +359,57 @@ fun WalkRequestCard(
                     )
                 }
             }
-            // Action Buttons
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                if (request.status == WalkRequestStatus.PENDING && request.buddyId == null) {
-                    Button(
-                        onClick = onAccept,
-                        colors = ButtonDefaults.buttonColors(containerColor = SuccessColor),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text("Accept")
-                    }
-                } else if (request.status == WalkRequestStatus.PENDING || request.status == WalkRequestStatus.ACCEPTED) {
-                    Button(
-                        onClick = onCancel,
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text("Cancel")
-                    }
-                    if (request.status == WalkRequestStatus.ACCEPTED || request.status == WalkRequestStatus.IN_PROGRESS) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = onComplete,
-                            colors = ButtonDefaults.buttonColors(containerColor = SuccessColor),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text("Complete")
+
+            // Action Buttons — role-aware
+            val showButtons = request.status != WalkRequestStatus.COMPLETED &&
+                    request.status != WalkRequestStatus.CANCELLED
+
+            if (showButtons) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    when {
+                        // PENDING: requester can cancel, others can accept
+                        request.status == WalkRequestStatus.PENDING -> {
+                            if (isRequester) {
+                                Button(
+                                    onClick = onCancel,
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text("Cancel")
+                                }
+                            } else if (!isBuddy && request.buddyId == null) {
+                                Button(
+                                    onClick = onAccept,
+                                    colors = ButtonDefaults.buttonColors(containerColor = SuccessColor),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text("Accept")
+                                }
+                            }
+                        }
+                        // ACCEPTED / IN_PROGRESS: requester can cancel, requester or buddy can complete
+                        request.status == WalkRequestStatus.ACCEPTED || request.status == WalkRequestStatus.IN_PROGRESS -> {
+                            if (isRequester || isBuddy) {
+                                Button(
+                                    onClick = onCancel,
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text("Cancel")
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Button(
+                                    onClick = onComplete,
+                                    colors = ButtonDefaults.buttonColors(containerColor = SuccessColor),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text("Complete")
+                                }
+                            }
                         }
                     }
                 }

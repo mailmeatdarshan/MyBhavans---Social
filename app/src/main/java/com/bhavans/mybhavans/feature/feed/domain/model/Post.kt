@@ -5,6 +5,7 @@ data class Post(
     val authorId: String = "",
     val authorName: String = "",
     val authorPhotoUrl: String = "",
+    val isAuthorVerified: Boolean = false,
     val content: String = "",
     val imageUrl: String = "",
     val category: PostCategory = PostCategory.GENERAL,

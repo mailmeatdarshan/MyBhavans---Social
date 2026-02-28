@@ -77,6 +77,18 @@ class AdminViewModel @Inject constructor(
         }
     }
 
+    fun toggleUserVerification(uid: String, currentlyVerified: Boolean) {
+        viewModelScope.launch {
+            when (val result = adminRepository.updateUserVerification(uid, !currentlyVerified)) {
+                is Resource.Success -> loadUsers()
+                is Resource.Error -> {
+                    _state.update { it.copy(error = result.message) }
+                }
+                is Resource.Loading -> {}
+            }
+        }
+    }
+
     fun deleteUser(uid: String) {
         viewModelScope.launch {
             when (val result = adminRepository.deleteUser(uid)) {
