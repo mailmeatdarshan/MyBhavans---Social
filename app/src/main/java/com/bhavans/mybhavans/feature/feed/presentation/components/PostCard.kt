@@ -56,6 +56,8 @@ import com.bhavans.mybhavans.core.ui.theme.ErrorColor
 import com.bhavans.mybhavans.core.ui.theme.StoryRingGradient
 import com.bhavans.mybhavans.feature.feed.domain.model.Post
 import com.google.firebase.auth.FirebaseAuth
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun PostCard(
@@ -71,6 +73,7 @@ fun PostCard(
 ) {
     val isLiked = post.isLikedBy(currentUserId)
     val isOwnPost = post.authorId == currentUserId
+    val context = LocalContext.current
 
     val heartColor by animateColorAsState(
         targetValue = if (isLiked) AccentPink else MaterialTheme.colorScheme.onSurface,
@@ -253,7 +256,20 @@ fun PostCard(
 
             // Share
             IconButton(
-                onClick = { },
+                onClick = {
+                    val shareText = """
+                        ${post.authorName} posted on MyBhavans:
+                        "${post.content}"
+                        
+                        Download the MyBhavans app to see more!
+                    """.trimIndent()
+                    
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, shareText)
+                    }
+                    context.startActivity(Intent.createChooser(intent, "Share post via"))
+                },
                 modifier = Modifier.size(40.dp)
             ) {
                 Icon(
